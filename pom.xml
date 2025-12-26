@@ -9,6 +9,7 @@
     <artifactId>patient-management</artifactId>
     <version>1.0.0</version>
     <packaging>war</packaging>
+    <url>https://github.com/hjstephan/hospital-system</url>
 
     <name>Hospital Patient Management System</name>
 
@@ -174,6 +175,27 @@
                             <!-- Write HTML and XML reports into repo-level doc/ folder instead of target/ -->
                             <outputDirectory>${project.basedir}/doc/jacoco</outputDirectory>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Maven PMD Plugin for static analysis -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <version>3.27.0</version>
+                <configuration>
+                    <!-- Use rulesetFiles to point to a filesystem path in the project root -->
+                    <rulesetFiles>${project.basedir}/pmd-ruleset.xml</rulesetFiles>
+                    <outputDirectory>${project.basedir}/doc/pmd</outputDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>run-pmd</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>pmd</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="Comprehensive Java Ruleset"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+
+    <description>
+        Comprehensive PMD ruleset with common Java checks (error-prone, design, performance,
+        best practices, code style, naming and multithreading). This file aggregates
+        widely-used PMD rules so the project gets a broad static analysis sweep.
+    </description>
+
+    <!-- Error-prone / correctness -->
+    <rule ref="category/java/errorprone.xml/EmptyCatchBlock" />
+    <rule ref="category/java/errorprone.xml/EmptyFinallyBlock" />
+    <rule ref="category/java/errorprone.xml/AvoidBranchingStatementAsLastInLoop" />
+    <rule ref="category/java/errorprone.xml/AvoidDecimalLiteralsInBigDecimalConstructor" />
+    <rule ref="category/java/errorprone.xml/AvoidMultipleUnaryOperators" />
+    <rule ref="category/java/errorprone.xml/UnconditionalIfStatement" />
+    <rule ref="category/java/errorprone.xml/NullAssignment" />
+    <rule ref="category/java/errorprone.xml/BrokenNullCheck" />
+    <rule ref="category/java/errorprone.xml/ReturnFromFinallyBlock" />
+    <rule ref="category/java/errorprone.xml/EmptyControlStatement" />
+    <rule ref="category/java/errorprone.xml/CheckResultSet" />
+    <rule ref="category/java/errorprone.xml/PrimitiveWrapperInstantiation" />
+    <rule ref="category/java/errorprone.xml/ClassCastExceptionWithToArray" />
+    <rule ref="category/java/errorprone.xml/DontUseFloatTypeForLoopIndices" />
+    <rule ref="category/java/errorprone.xml/OverrideBothEqualsAndHashcode" />
+    <rule ref="category/java/errorprone.xml/UnnecessaryReturn" />
+
+    <!-- Design / complexity -->
+    <rule ref="category/java/design.xml/CyclomaticComplexity">
+        <properties>
+            <property name="classReportLevel" value="80" />
+            <property name="methodReportLevel" value="10" />
+        </properties>
+    </rule>
+    <rule ref="category/java/design.xml/AvoidDeeplyNestedIfStmts">
+        <properties>
+            <property name="problemDegree" value="3" />
+        </properties>
+    </rule>
+    <rule ref="category/java/design.xml/SignatureDeclareThrowsException" />
+    <rule ref="category/java/design.xml/LooseCoupling" />
+    <rule ref="category/java/design.xml/TooManyFields" />
+    <rule ref="category/java/design.xml/TooManyMethods" />
+    <rule ref="category/java/design.xml/TooManyParameters" />
+    <rule ref="category/java/design.xml/UseCollectionIsEmpty" />
+
+    <!-- Performance -->
+    <rule ref="category/java/performance.xml/BigIntegerInstantiation" />
+    <rule ref="category/java/performance.xml/AvoidInstantiatingObjectsInLoops" />
+    <rule ref="category/java/performance.xml/UseStringBufferForStringAppends" />
+    <rule ref="category/java/performance.xml/InefficientEmptyStringCheck" />
+    <rule ref="category/java/performance.xml/InefficientStringBuffering" />
+
+    <!-- Best practices -->
+    <rule ref="category/java/bestpractices.xml/AvoidUsingHardCodedIP" />
+    <rule ref="category/java/bestpractices.xml/UnusedPrivateField" />
+    <rule ref="category/java/bestpractices.xml/UnusedLocalVariable" />
+    <rule ref="category/java/bestpractices.xml/UnusedPrivateMethod" />
+    <rule ref="category/java/bestpractices.xml/UnusedFormalParameter" />
+    <rule ref="category/java/bestpractices.xml/SystemPrintln" />
+    <rule ref="category/java/bestpractices.xml/GuardLogStatement" />
+    <rule ref="category/java/bestpractices.xml/CloseResource" />
+    <rule ref="category/java/bestpractices.xml/UseUtilityClass" />
+    <rule ref="category/java/bestpractices.xml/DefaultLabelNotLastInSwitchStatement" />
+
+    <!-- Code style / readability -->
+    <rule ref="category/java/codestyle.xml/ControlStatementBraces" />
+    <rule ref="category/java/codestyle.xml/ExtendsObject" />
+    <rule ref="category/java/codestyle.xml/FieldDeclarationsShouldBeAtStartOfClass" />
+    <rule ref="category/java/codestyle.xml/UnnecessaryModifier" />
+    <rule ref="category/java/codestyle.xml/UnnecessaryFullyQualifiedName" />
+    <rule ref="category/java/codestyle.xml/UnnecessaryImport" />
+    <rule ref="category/java/codestyle.xml/UselessParentheses" />
+    <rule ref="category/java/codestyle.xml/SimplifiedTernary" />
+    <rule ref="category/java/codestyle.xml/CollapsibleIfStatements" />
+    <rule ref="category/java/codestyle.xml/UselessQualifiedThis" />
+    <rule ref="category/java/codestyle.xml/TooManyStaticImports" />
+
+    <!-- Multithreading / concurrency -->
+    <rule ref="category/java/multithreading.xml/AvoidThreadGroup" />
+    <rule ref="category/java/multithreading.xml/DontCallThreadRun" />
+    <rule ref="category/java/multithreading.xml/DoubleCheckedLocking" />
+
+    <!-- Naming / API usage -->
+    <rule ref="category/java/naming.xml/MethodNamingConventions" />
+    <rule ref="category/java/naming.xml/VariableNamingConventions" />
+    <rule ref="category/java/naming.xml/BooleanNamingConventions" />
+
+    <!-- Security-related / misc checks -->
+    <rule ref="category/java/security.xml/DoNotHardcodePassword" />
+    <rule ref="category/java/security.xml/InsecureCryptoUsage" />
+
+    <!-- Misc useful rules -->
+    <rule ref="category/java/errorprone.xml/JumbledIncrementer" />
+    <rule ref="category/java/errorprone.xml/MisplacedNullCheck" />
+    <rule ref="category/java/errorprone.xml/UnnecessaryConversionTemporary" />
+    <rule ref="category/java/errorprone.xml/UnusedNullCheckInEquals" />
+    <rule ref="category/java/errorprone.xml/UselessOperationOnImmutable" />
+
+    <!-- tuning / thresholds can be adjusted later -->
+
+</ruleset>
