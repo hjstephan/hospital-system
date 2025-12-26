@@ -2,6 +2,7 @@ package com.hospital.entity;
 
 import java.time.LocalDate;
 
+import jakarta.json.bind.annotation.JsonbTransient;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -33,6 +34,7 @@ public class Medication {
 
     @ManyToOne
     @JoinColumn(name = "patient_id")
+    @JsonbTransient
     private Patient patient;
 
     public Medication() {

@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import jakarta.json.bind.annotation.JsonbTransient;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -258,6 +259,7 @@ public class Patient {
         return updatedAt;
     }
 
+    @JsonbTransient
     public List<Diagnosis> getDiagnoses() {
         return diagnoses;
     }
@@ -266,6 +268,7 @@ public class Patient {
         this.diagnoses = diagnoses;
     }
 
+    @JsonbTransient
     public List<Medication> getMedications() {
         return medications;
     }
