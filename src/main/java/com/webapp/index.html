@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Krankenhaus Patientenverwaltung mit EPA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .epa-status-banner {
+            background: #28a745;
+            color: white;
+            padding: 10px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .epa-status-banner.disconnected {
+            background: #dc3545;
+        }
+
+        .controls {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        input[type="text"], input[type="email"], input[type="tel"], 
+        input[type="date"], select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 1px;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-discharged {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .epa-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 5px;
+        }
+
+        .epa-synced {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .epa-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .epa-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .epa-disabled {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .action-buttons button {
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+
+        .epa-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .epa-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 2em;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .stat-card p {
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            table {
+                font-size: 12px;
+            }
+            
+            th, td {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏥 Krankenhaus Patientenverwaltung</h1>
+            <p>Zentrale Verwaltung für Patientendaten mit EPA-Integration</p>
+        </header>
+
+        <div id="epaStatusBanner" class="epa-status-banner">
+            <span>📡 EPA-Status: <strong id="epaStatusText">Prüfe Verbindung...</strong></span>
+            <button class="btn-primary" onclick="checkEPAConnection()" style="padding: 5px 15px; font-size: 12px;">🔄 Verbindung testen</button>
+        </div>
+
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Patient suchen (Name)...">
+            </div>
+            <button class="btn-primary" onclick="openModal()">➕ Neuer Patient</button>
+            <button class="btn-primary" onclick="loadPatients()">🔄 Aktualisieren</button>
+            <button class="btn-info" onclick="showEPAStats()">📊 EPA-Statistiken</button>
+            <button class="btn-success" onclick="syncAllToEPA()">📤 Alle zu EPA synchronisieren</button>
+        </div>
+
+        <div class="content">
+            <div id="statsContainer"></div>
+            <div id="patientsTable"></div>
+        </div>
+    </div>
+
+    <!-- Modal für Patient erstellen/bearbeiten -->
+    <div id="patientModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Neuer Patient</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="patientForm">
+                    <input type="hidden" id="patientId">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Vorname *</label>
+                            <input type="text" id="firstName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Nachname *</label>
+                            <input type="text" id="lastName" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Geburtsdatum *</label>
+                            <input type="date" id="dateOfBirth" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Geschlecht *</label>
+                            <select id="gender" required>
+                                <option value="">Bitte wählen</option>
+                                <option value="Männlich">Männlich</option>
+                                <option value="Weiblich">Weiblich</option>
+                                <option value="Divers">Divers</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Telefon</label>
+                            <input type="tel" id="phone">
+                        </div>
+                        <div class="form-group">
+                            <label>E-Mail</label>
+                            <input type="email" id="email">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Adresse</label>
+                        <textarea id="address" rows="2"></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Versicherungsnummer *</label>
+                            <input type="text" id="insuranceNumber" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Blutgruppe</label>
+                            <select id="bloodType">
+                                <option value="">Bitte wählen</option>
+                                <option value="A+">A+</option>
+                                <option value="A-">A-</option>
+                                <option value="B+">B+</option>
+                                <option value="B-">B-</option>
+                                <option value="AB+">AB+</option>
+                                <option value="AB-">AB-</option>
+                                <option value="O+">O+</option>
+                                <option value="O-">O-</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Allergien</label>
+                        <textarea id="allergies" rows="2"></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Notfallkontakt Name</label>
+                            <input type="text" id="emergencyContactName">
+                        </div>
+                        <div class="form-group">
+                            <label>Notfallkontakt Telefon</label>
+                            <input type="tel" id="emergencyContactPhone">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Status *</label>
+                            <select id="status" required>
+                                <option value="active">Aktiv</option>
+                                <option value="discharged">Entlassen</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="epa-section">
+                        <h3>📋 Elektronische Patientenakte (EPA)</h3>
+                        <div class="form-group">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="epaEnabled" checked>
+                                <label style="margin: 0;">Patient stimmt EPA-Synchronisation zu</label>
+                            </div>
+                            <small style="color: #6c757d; display: block; margin-top: 10px;">
+                                Mit der Einwilligung werden Patientendaten gemäß FHIR-Standard an die elektronische Patientenakte übertragen.
+                            </small>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-top: 30px;">
+                        <button type="submit" class="btn-success" style="flex: 1;">💾 Speichern</button>
+                        <button type="button" class="btn-danger" onclick="closeModal()">❌ Abbrechen</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api/patients';
+        const EPA_API_URL = '/api/epa';
+        let currentEditId = null;
+
+        // Prüfe EPA-Verbindung beim Laden
+        window.addEventListener('load', () => {
+            checkEPAConnection();
+            loadPatients();
+        });
+
+        // EPA-Verbindung testen
+        async function checkEPAConnection() {
+            const banner = document.getElementById('epaStatusBanner');
+            const statusText = document.getElementById('epaStatusText');
+            
+            try {
+                const response = await fetch(`${EPA_API_URL}/test-connection`);
+                const data = await response.json();
+                
+                if (data.connected) {
+                    banner.className = 'epa-status-banner';
+                    statusText.textContent = 'EPA-Verbindung aktiv ✓';
+                } else {
+                    banner.className = 'epa-status-banner disconnected';
+                    statusText.textContent = 'EPA nicht erreichbar ✗';
+                }
+            } catch (error) {
+                banner.className = 'epa-status-banner disconnected';
+                statusText.textContent = 'EPA-Verbindung fehlgeschlagen ✗';
+            }
+        }
+
+        // EPA-Statistiken anzeigen
+        async function showEPAStats() {
+            try {
+                const response = await fetch(`${EPA_API_URL}/statistics`);
+                const stats = await response.json();
+                
+                const statsHTML = `
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3>${stats.total}</h3>
+                            <p>Gesamt Patienten</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>${stats.epaEnabled}</h3>
+                            <p>EPA aktiviert</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>${stats.synced}</h3>
+                            <p>Synchronisiert</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>${stats.errors}</h3>
+                            <p>Fehler</p>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('statsContainer').innerHTML = statsHTML;
+            } catch (error) {
+                alert('Fehler beim Laden der Statistiken: ' + error.message);
+            }
+        }
+
+        // Patienten laden
+        async function loadPatients(filter = '') {
+            const tableDiv = document.getElementById('patientsTable');
+            tableDiv.innerHTML = '<div class="loading">Lade Patienten...</div>';
+
+            try {
+                let url = API_URL;
+                if (filter) {
+                    url = `${API_URL}/search?q=${encodeURIComponent(filter)}`;
+                }
+
+                const response = await fetch(url);
+                const patients = await response.json();
+
+                if (patients.length === 0) {
+                    tableDiv.innerHTML = '<p style="text-align: center; padding: 40px; color: #6c757d;">Keine Patienten gefunden</p>';
+                    return;
+                }
+
+                let html = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Geburtsdatum</th>
+                                <th>Vers.-Nr.</th>
+                                <th>Blutgruppe</th>
+                                <th>Status</th>
+                                <th>EPA-Status</th>
+                                <th>Aktionen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                patients.forEach(p => {
+                    const statusClass = p.status === 'active' ? 'status-active' : 'status-discharged';
+                    const statusText = p.status === 'active' ? 'Aktiv' : 'Entlassen';
+                    
+                    let epaStatusBadge = '';
+                    if (p.epaEnabled) {
+                        const epaClass = 'epa-' + (p.epaSyncStatus || 'pending');
+                        const epaText = {
+                            'synced': '✓ Sync',
+                            'pending': '⏳ Ausstehend',
+                            'error': '✗ Fehler',
+                            'disabled': '○ Deaktiviert'
+                        }[p.epaSyncStatus] || '○ Unbekannt';
+                        
+                        epaStatusBadge = `<span class="epa-badge ${epaClass}">${epaText}</span>`;
+                    } else {
+                        epaStatusBadge = '<span class="epa-badge epa-disabled">EPA aus</span>';
+                    }
+                    
+                    html += `
+                        <tr>
+                            <td>${p.id}</td>
+                            <td><strong>${p.firstName} ${p.lastName}</strong></td>
+                            <td>${formatDate(p.dateOfBirth)}</td>
+                            <td>${p.insuranceNumber}</td>
+                            <td>${p.bloodType || '-'}</td>
+                            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                            <td>${epaStatusBadge}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-warning" onclick="editPatient(${p.id})">✏️</button>
+                                    <button class="btn-info" onclick="syncToEPA(${p.id})">📤 EPA</button>
+                                    <button class="btn-danger" onclick="deletePatient(${p.id})">🗑️</button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += '</tbody></table>';
+                tableDiv.innerHTML = html;
+
+            } catch (error) {
+                tableDiv.innerHTML = `<p style="text-align: center; padding: 40px; color: #dc3545;">Fehler beim Laden: ${error.message}</p>`;
+            }
+        }
+
+        // Einzelnen Patient zu EPA synchronisieren
+        async function syncToEPA(patientId) {
+            if (!confirm('Patient jetzt zur EPA synchronisieren?')) return;
+            
+            try {
+                const response = await fetch(`${EPA_API_URL}/sync/${patientId}`, {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('✓ Patient erfolgreich zur EPA synchronisiert!\nEPA-ID: ' + result.epaId);
+                    loadPatients();
+                } else {
+                    alert('✗ Synchronisation fehlgeschlagen:\n' + result.error);
+                }
+            } catch (error) {
+                alert('Fehler bei EPA-Synchronisation: ' + error.message);
+            }
+        }
+
+        // Alle Patienten zur EPA synchronisieren
+        async function syncAllToEPA() {
+            if (!confirm('Alle Patienten mit EPA-Einwilligung jetzt synchronisieren?')) return;
+            
+            try {
+                const response = await fetch(`${EPA_API_URL}/sync-all`, {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                alert(`Synchronisation abgeschlossen:\n✓ Erfolgreich: ${result.success}\n✗ Fehlgeschlagen: ${result.failed}\nGesamt: ${result.total}`);
+                loadPatients();
+            } catch (error) {
+                alert('Fehler bei Massen-Synchronisation: ' + error.message);
+            }
+        }
+
+        // Datum formatieren
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('de-DE');
+        }
+
+        // Modal öffnen
+        function openModal(editMode = false) {
+            document.getElementById('patientModal').classList.add('active');
+            document.getElementById('modalTitle').textContent = editMode ? 'Patient bearbeiten' : 'Neuer Patient';
+        }
+
+        // Modal schließen
+        function closeModal() {
+            document.getElementById('patientModal').classList.remove('active');
+            document.getElementById('patientForm').reset();
+            currentEditId = null;
+        }
+
+        // Patient bearbeiten
+        async function editPatient(id) {
+            try {
+                const response = await fetch(`${API_URL}/${id}`);
+                const patient = await response.json();
+
+                currentEditId = id;
+                document.getElementById('firstName').value = patient.firstName;
+                document.getElementById('lastName').value = patient.lastName;
+                document.getElementById('dateOfBirth').value = patient.dateOfBirth;
+                document.getElementById('gender').value = patient.gender;
+                document.getElementById('phone').value = patient.phone || '';
+                document.getElementById('email').value = patient.email || '';
+                document.getElementById('address').value = patient.address || '';
+                document.getElementById('insuranceNumber').value = patient.insuranceNumber;
+                document.getElementById('bloodType').value = patient.bloodType || '';
+                document.getElementById('allergies').value = patient.allergies || '';
+                document.getElementById('emergencyContactName').value = patient.emergencyContactName || '';
+                document.getElementById('emergencyContactPhone').value = patient.emergencyContactPhone || '';
+                document.getElementById('status').value = patient.status;
+                document.getElementById('epaEnabled').checked = patient.epaEnabled !== false;
+
+                openModal(true);
+            } catch (error) {
+                alert('Fehler beim Laden des Patienten: ' + error.message);
+            }
+        }
+
+        // Patient löschen
+        async function deletePatient(id) {
+            if (!confirm('Möchten Sie diesen Patienten wirklich löschen?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert('Patient erfolgreich gelöscht');
+                    loadPatients();
+                } else {
+                    alert('Fehler beim Löschen');
+                }
+            } catch (error) {
+                alert('Fehler: ' + error.message);
+            }
+        }
+
+        // Formular absenden
+        document.getElementById('patientForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const patientData = {
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                dateOfBirth: document.getElementById('dateOfBirth').value,
+                gender: document.getElementById('gender').value,
+                phone: document.getElementById('phone').value,
+                email: document.getElementById('email').value,
+                address: document.getElementById('address').value,
+                insuranceNumber: document.getElementById('insuranceNumber').value,
+                bloodType: document.getElementById('bloodType').value,
+                allergies: document.getElementById('allergies').value,
+                emergencyContactName: document.getElementById('emergencyContactName').value,
+                emergencyContactPhone: document.getElementById('emergencyContactPhone').value,
+                status: document.getElementById('status').value,
+                epaEnabled: document.getElementById('epaEnabled').checked
+            };
+
+            try {
+                const url = currentEditId ? `${API_URL}/${currentEditId}` : API_URL;
+                const method = currentEditId ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(patientData)
+                });
+
+                if (response.ok) {
+                    const savedPatient = await response.json();
+                    alert(currentEditId ? 'Patient erfolgreich aktualisiert' : 'Patient erfolgreich erstellt');
+                    
+                    // EPA-Einwilligung setzen
+                    if (savedPatient.id && patientData.epaEnabled) {
+                        await fetch(`${EPA_API_URL}/consent/${savedPatient.id}?enabled=true`, {
+                            method: 'PUT'
+                        });
+                    }
+                    
+                    closeModal();
+                    loadPatients();
+                } else {
+                    const error = await response.json();
+                    alert('Fehler: ' + (error.error || 'Unbekannter Fehler'));
+                }
+            } catch (error) {
+                alert('Fehler: ' + error.message);
+            }
+        });
+
+        // Suche
+        let searchTimeout;
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                const query = e.target.value.trim();
+                if (query.length >= 2) {
+                    loadPatients(query);
+                } else if (query.length === 0) {
+                    loadPatients();
+                }
+            }, 300);
+        });
+    </script>
+</body>
+</html>
