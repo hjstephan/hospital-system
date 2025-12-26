@@ -7,7 +7,6 @@ import com.hospital.entity.Patient;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import jakarta.ws.rs.ApplicationPath;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
@@ -139,8 +138,4 @@ public class PatientResource {
                     .entity("{\"error\": \"" + e.getMessage() + "\"}").build();
         }
     }
-}
-
-@ApplicationPath("/api")
-class RestConfig extends jakarta.ws.rs.core.Application {
 }
