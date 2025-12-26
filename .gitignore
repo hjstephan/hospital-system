@@ -1,0 +1,71 @@
+
+# OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Backup files
+*~
+# Temporary files
+*.swp
+
+# Java / Maven
+target/
+*.class
+*.jar
+*.war
+*.ear
+
+# Generated sources
+/generated-sources/
+/**/generated-sources/
+
+# Maven local repository - usually not in project, but safe to ignore
+/.m2/
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# IntelliJ IDEA
+/.idea/
+*.iml
+*.iws
+*.ipr
+
+# NetBeans
+/nbproject/private/
+/build/
+/dist/
+
+# VS Code
+.vscode/
+
+# Logs
+.log
+logs/
+
+# Temporary / build files
+tmp/
+temp/
+*.tmp
+
+# Environment / secrets
+.env
+.env.local
+*.jks
+*.keystore
+
+# Database
+*.db
+*.sqlite
+
+# OS metadata
+Icon?
+
+# IDE / toolchain folders
+/out/
+
+# Ignore compiled resources and generated classes from other modules
+**/target/
