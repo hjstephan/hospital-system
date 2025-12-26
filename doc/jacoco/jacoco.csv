@@ -1,0 +1,11 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+Hospital Patient Management System,com.hospital.epa,EPASyncResult,0,15,0,0,0,6,0,3,0,3
+Hospital Patient Management System,com.hospital.epa,FHIRConverter,11,435,19,33,5,105,19,15,0,6
+Hospital Patient Management System,com.hospital.epa,EPAResponse,3,18,0,0,1,7,1,3,1,3
+Hospital Patient Management System,com.hospital.epa,EPAIntegrationService,180,114,11,3,40,31,8,6,2,5
+Hospital Patient Management System,com.hospital.rest,EPAResource,417,0,26,0,110,0,23,0,10,0
+Hospital Patient Management System,com.hospital.rest,PatientResource,45,187,0,8,15,49,0,11,0,7
+Hospital Patient Management System,com.hospital.rest,RestConfig,3,0,0,0,2,0,1,0,1,0
+Hospital Patient Management System,com.hospital.entity,Medication,45,0,0,0,20,0,13,0,13,0
+Hospital Patient Management System,com.hospital.entity,Patient,37,167,2,0,15,71,9,45,8,45
+Hospital Patient Management System,com.hospital.entity,Diagnosis,31,0,0,0,14,0,9,0,9,0

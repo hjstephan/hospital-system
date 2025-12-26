@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FHIRConverter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Hospital Patient Management System</a> &gt; <a href="index.source.html" class="el_package">com.hospital.epa</a> &gt; <span class="el_source">FHIRConverter.java</span></div><h1>FHIRConverter.java</h1><pre class="source lang-java linenums">package com.hospital.epa;
+
+import com.hospital.entity.Patient;
+
+import jakarta.ejb.Stateless;
+import jakarta.json.Json;
+import jakarta.json.JsonArrayBuilder;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonObjectBuilder;
+
+/**
+ * Konverter für FHIR-Standard (Fast Healthcare Interoperability Resources)
+ * Konvertiert interne Patientendaten in FHIR R4 Format
+ */
+@Stateless
+<span class="fc" id="L16">public class FHIRConverter {</span>
+
+    /**
+     * Konvertiert einen Patient in FHIR R4 JSON-Format
+     */
+    public String patientToFHIR(Patient patient) {
+<span class="fc" id="L22">        JsonObjectBuilder builder = Json.createObjectBuilder();</span>
+
+        // FHIR Resource Type
+<span class="fc" id="L25">        builder.add(&quot;resourceType&quot;, &quot;Patient&quot;);</span>
+
+        // Identifier (Versicherungsnummer)
+<span class="fc" id="L28">        JsonArrayBuilder identifierArray = Json.createArrayBuilder();</span>
+<span class="fc" id="L29">        identifierArray.add(Json.createObjectBuilder()</span>
+<span class="fc" id="L30">                .add(&quot;use&quot;, &quot;official&quot;)</span>
+<span class="fc" id="L31">                .add(&quot;system&quot;, &quot;urn:oid:1.2.276.0.76.4.8&quot;)</span>
+<span class="fc" id="L32">                .add(&quot;value&quot;, patient.getInsuranceNumber()));</span>
+<span class="fc" id="L33">        builder.add(&quot;identifier&quot;, identifierArray);</span>
+
+        // Name
+<span class="fc" id="L36">        JsonArrayBuilder nameArray = Json.createArrayBuilder();</span>
+<span class="fc" id="L37">        nameArray.add(Json.createObjectBuilder()</span>
+<span class="fc" id="L38">                .add(&quot;use&quot;, &quot;official&quot;)</span>
+<span class="fc" id="L39">                .add(&quot;family&quot;, patient.getLastName())</span>
+<span class="fc" id="L40">                .add(&quot;given&quot;, Json.createArrayBuilder().add(patient.getFirstName())));</span>
+<span class="fc" id="L41">        builder.add(&quot;name&quot;, nameArray);</span>
+
+        // Geschlecht (FHIR: male, female, other, unknown)
+<span class="fc" id="L44">        String fhirGender = convertGenderToFHIR(patient.getGender());</span>
+<span class="fc" id="L45">        builder.add(&quot;gender&quot;, fhirGender);</span>
+
+        // Geburtsdatum
+<span class="fc" id="L48">        builder.add(&quot;birthDate&quot;, patient.getDateOfBirth().toString());</span>
+
+        // Kontaktdaten
+<span class="fc" id="L51">        JsonArrayBuilder telecomArray = Json.createArrayBuilder();</span>
+<span class="pc bpc" id="L52" title="1 of 4 branches missed.">        if (patient.getPhone() != null &amp;&amp; !patient.getPhone().isEmpty()) {</span>
+<span class="fc" id="L53">            telecomArray.add(Json.createObjectBuilder()</span>
+<span class="fc" id="L54">                    .add(&quot;system&quot;, &quot;phone&quot;)</span>
+<span class="fc" id="L55">                    .add(&quot;value&quot;, patient.getPhone())</span>
+<span class="fc" id="L56">                    .add(&quot;use&quot;, &quot;home&quot;));</span>
+        }
+<span class="pc bpc" id="L58" title="1 of 4 branches missed.">        if (patient.getEmail() != null &amp;&amp; !patient.getEmail().isEmpty()) {</span>
+<span class="fc" id="L59">            telecomArray.add(Json.createObjectBuilder()</span>
+<span class="fc" id="L60">                    .add(&quot;system&quot;, &quot;email&quot;)</span>
+<span class="fc" id="L61">                    .add(&quot;value&quot;, patient.getEmail()));</span>
+        }
+<span class="fc" id="L63">        builder.add(&quot;telecom&quot;, telecomArray);</span>
+
+        // Adresse
+<span class="pc bpc" id="L66" title="1 of 4 branches missed.">        if (patient.getAddress() != null &amp;&amp; !patient.getAddress().isEmpty()) {</span>
+<span class="fc" id="L67">            JsonArrayBuilder addressArray = Json.createArrayBuilder();</span>
+<span class="fc" id="L68">            addressArray.add(Json.createObjectBuilder()</span>
+<span class="fc" id="L69">                    .add(&quot;use&quot;, &quot;home&quot;)</span>
+<span class="fc" id="L70">                    .add(&quot;type&quot;, &quot;physical&quot;)</span>
+<span class="fc" id="L71">                    .add(&quot;text&quot;, patient.getAddress()));</span>
+<span class="fc" id="L72">            builder.add(&quot;address&quot;, addressArray);</span>
+        }
+
+        // Status (active/inactive)
+<span class="fc" id="L76">        boolean isActive = &quot;active&quot;.equals(patient.getStatus());</span>
+<span class="fc" id="L77">        builder.add(&quot;active&quot;, isActive);</span>
+
+        // Extensions für zusätzliche Daten
+<span class="fc" id="L80">        JsonArrayBuilder extensionArray = Json.createArrayBuilder();</span>
+
+        // Blutgruppe als Extension
+<span class="pc bpc" id="L83" title="1 of 4 branches missed.">        if (patient.getBloodType() != null &amp;&amp; !patient.getBloodType().isEmpty()) {</span>
+<span class="fc" id="L84">            extensionArray.add(Json.createObjectBuilder()</span>
+<span class="fc" id="L85">                    .add(&quot;url&quot;, &quot;http://hospital.example.com/fhir/StructureDefinition/blood-type&quot;)</span>
+<span class="fc" id="L86">                    .add(&quot;valueString&quot;, patient.getBloodType()));</span>
+        }
+
+        // Allergien als Extension
+<span class="pc bpc" id="L90" title="1 of 4 branches missed.">        if (patient.getAllergies() != null &amp;&amp; !patient.getAllergies().isEmpty()) {</span>
+<span class="fc" id="L91">            extensionArray.add(Json.createObjectBuilder()</span>
+<span class="fc" id="L92">                    .add(&quot;url&quot;, &quot;http://hospital.example.com/fhir/StructureDefinition/allergies&quot;)</span>
+<span class="fc" id="L93">                    .add(&quot;valueString&quot;, patient.getAllergies()));</span>
+        }
+
+<span class="fc" id="L96">        builder.add(&quot;extension&quot;, extensionArray);</span>
+
+        // Notfallkontakt
+<span class="pc bpc" id="L99" title="1 of 4 branches missed.">        if (patient.getEmergencyContactName() != null &amp;&amp; !patient.getEmergencyContactName().isEmpty()) {</span>
+<span class="fc" id="L100">            JsonArrayBuilder contactArray = Json.createArrayBuilder();</span>
+<span class="fc" id="L101">            JsonObjectBuilder contactBuilder = Json.createObjectBuilder()</span>
+<span class="fc" id="L102">                    .add(&quot;relationship&quot;, Json.createArrayBuilder()</span>
+<span class="fc" id="L103">                            .add(Json.createObjectBuilder()</span>
+<span class="fc" id="L104">                                    .add(&quot;coding&quot;, Json.createArrayBuilder()</span>
+<span class="fc" id="L105">                                            .add(Json.createObjectBuilder()</span>
+<span class="fc" id="L106">                                                    .add(&quot;system&quot;, &quot;http://terminology.hl7.org/CodeSystem/v2-0131&quot;)</span>
+<span class="fc" id="L107">                                                    .add(&quot;code&quot;, &quot;C&quot;)</span>
+<span class="fc" id="L108">                                                    .add(&quot;display&quot;, &quot;Emergency Contact&quot;)))));</span>
+
+<span class="fc" id="L110">            contactBuilder.add(&quot;name&quot;, Json.createObjectBuilder()</span>
+<span class="fc" id="L111">                    .add(&quot;text&quot;, patient.getEmergencyContactName()));</span>
+
+<span class="pc bpc" id="L113" title="2 of 4 branches missed.">            if (patient.getEmergencyContactPhone() != null &amp;&amp; !patient.getEmergencyContactPhone().isEmpty()) {</span>
+<span class="fc" id="L114">                contactBuilder.add(&quot;telecom&quot;, Json.createArrayBuilder()</span>
+<span class="fc" id="L115">                        .add(Json.createObjectBuilder()</span>
+<span class="fc" id="L116">                                .add(&quot;system&quot;, &quot;phone&quot;)</span>
+<span class="fc" id="L117">                                .add(&quot;value&quot;, patient.getEmergencyContactPhone())));</span>
+            }
+
+<span class="fc" id="L120">            contactArray.add(contactBuilder);</span>
+<span class="fc" id="L121">            builder.add(&quot;contact&quot;, contactArray);</span>
+        }
+
+<span class="fc" id="L124">        JsonObject fhirPatient = builder.build();</span>
+<span class="fc" id="L125">        return fhirPatient.toString();</span>
+    }
+
+    /**
+     * Konvertiert Geschlecht in FHIR-Format
+     */
+    private String convertGenderToFHIR(String gender) {
+<span class="pc bpc" id="L132" title="1 of 2 branches missed.">        if (gender == null)</span>
+<span class="nc" id="L133">            return &quot;unknown&quot;;</span>
+
+<span class="pc bpc" id="L135" title="1 of 4 branches missed.">        switch (gender.toLowerCase()) {</span>
+            case &quot;männlich&quot;:
+            case &quot;male&quot;:
+<span class="fc" id="L138">                return &quot;male&quot;;</span>
+            case &quot;weiblich&quot;:
+            case &quot;female&quot;:
+<span class="fc" id="L141">                return &quot;female&quot;;</span>
+            case &quot;divers&quot;:
+            case &quot;other&quot;:
+<span class="fc" id="L144">                return &quot;other&quot;;</span>
+            default:
+<span class="nc" id="L146">                return &quot;unknown&quot;;</span>
+        }
+    }
+
+    /**
+     * Konvertiert FHIR-Patient zurück in internes Format
+     */
+    public Patient fhirToPatient(JsonObject fhirPatient) {
+<span class="fc" id="L154">        Patient patient = new Patient();</span>
+
+        // Name extrahieren
+<span class="pc bpc" id="L157" title="1 of 2 branches missed.">        if (fhirPatient.containsKey(&quot;name&quot;)) {</span>
+<span class="fc" id="L158">            JsonObject name = fhirPatient.getJsonArray(&quot;name&quot;).getJsonObject(0);</span>
+<span class="fc" id="L159">            patient.setLastName(name.getString(&quot;family&quot;));</span>
+<span class="fc" id="L160">            patient.setFirstName(name.getJsonArray(&quot;given&quot;).getString(0));</span>
+        }
+
+        // Geburtsdatum
+<span class="pc bpc" id="L164" title="1 of 2 branches missed.">        if (fhirPatient.containsKey(&quot;birthDate&quot;)) {</span>
+<span class="fc" id="L165">            patient.setDateOfBirth(java.time.LocalDate.parse(fhirPatient.getString(&quot;birthDate&quot;)));</span>
+        }
+
+        // Geschlecht
+<span class="pc bpc" id="L169" title="1 of 2 branches missed.">        if (fhirPatient.containsKey(&quot;gender&quot;)) {</span>
+<span class="fc" id="L170">            String fhirGender = fhirPatient.getString(&quot;gender&quot;);</span>
+<span class="fc" id="L171">            patient.setGender(convertFHIRToGender(fhirGender));</span>
+        }
+
+        // Identifier (Versicherungsnummer)
+<span class="pc bpc" id="L175" title="1 of 2 branches missed.">        if (fhirPatient.containsKey(&quot;identifier&quot;)) {</span>
+<span class="fc" id="L176">            JsonObject identifier = fhirPatient.getJsonArray(&quot;identifier&quot;).getJsonObject(0);</span>
+<span class="fc" id="L177">            patient.setInsuranceNumber(identifier.getString(&quot;value&quot;));</span>
+        }
+
+        // Status
+<span class="pc bpc" id="L181" title="1 of 2 branches missed.">        if (fhirPatient.containsKey(&quot;active&quot;)) {</span>
+<span class="fc" id="L182">            boolean active = fhirPatient.getBoolean(&quot;active&quot;);</span>
+<span class="pc bpc" id="L183" title="1 of 2 branches missed.">            patient.setStatus(active ? &quot;active&quot; : &quot;discharged&quot;);</span>
+        }
+
+<span class="fc" id="L186">        return patient;</span>
+    }
+
+    /**
+     * Konvertiert FHIR-Geschlecht zurück
+     */
+    private String convertFHIRToGender(String fhirGender) {
+<span class="pc bpc" id="L193" title="3 of 4 branches missed.">        switch (fhirGender) {</span>
+            case &quot;male&quot;:
+<span class="fc" id="L195">                return &quot;Männlich&quot;;</span>
+            case &quot;female&quot;:
+<span class="nc" id="L197">                return &quot;Weiblich&quot;;</span>
+            case &quot;other&quot;:
+<span class="nc" id="L199">                return &quot;Divers&quot;;</span>
+            default:
+<span class="nc" id="L201">                return &quot;Unbekannt&quot;;</span>
+        }
+    }
+
+    /**
+     * Erstellt eine FHIR Bundle-Resource für mehrere Patienten
+     */
+    public String createPatientBundle(java.util.List&lt;Patient&gt; patients) {
+<span class="fc" id="L209">        JsonObjectBuilder bundle = Json.createObjectBuilder();</span>
+<span class="fc" id="L210">        bundle.add(&quot;resourceType&quot;, &quot;Bundle&quot;);</span>
+<span class="fc" id="L211">        bundle.add(&quot;type&quot;, &quot;collection&quot;);</span>
+<span class="fc" id="L212">        bundle.add(&quot;total&quot;, patients.size());</span>
+
+<span class="fc" id="L214">        JsonArrayBuilder entries = Json.createArrayBuilder();</span>
+<span class="fc bfc" id="L215" title="All 2 branches covered.">        for (Patient patient : patients) {</span>
+<span class="fc" id="L216">            entries.add(Json.createObjectBuilder()</span>
+<span class="fc" id="L217">                    .add(&quot;resource&quot;, Json.createReader(</span>
+<span class="fc" id="L218">                            new java.io.StringReader(patientToFHIR(patient))).readObject()));</span>
+<span class="fc" id="L219">        }</span>
+
+<span class="fc" id="L221">        bundle.add(&quot;entry&quot;, entries);</span>
+<span class="fc" id="L222">        return bundle.build().toString();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

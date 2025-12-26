@@ -1,86 +1,421 @@
 # Hospital Patient Management System
 
-This repository contains a small Java EE / Jakarta EE web application (WAR) for managing patient records and synchronizing with an external Electronic Patient Record (EPA).
+A comprehensive hospital patient management system with electronic health record (EPA/EHR) integration, built with Jakarta EE, PostgreSQL, and modern web technologies.
 
-The README below summarizes the project structure, how to build and deploy, database setup, and troubleshooting notes.
+## Features
 
-## Repository layout (important files and directories)
+- **Patient Management**: Complete CRUD operations for patient records
+- **EPA Integration**: FHIR R4 compliant electronic patient record integration
+- **Search & Filter**: Advanced patient search capabilities
+- **Responsive UI**: Modern, mobile-friendly interface
+- **RESTful API**: Well-documented REST endpoints
+- **Data Security**: Secure patient data handling with consent management
+- **Audit Trail**: Complete logging of EPA synchronization activities
+
+## Technology Stack
+
+### Backend
+- **Jakarta EE 10**: Enterprise Java framework
+- **JPA/Hibernate**: Object-relational mapping
+- **JAX-RS**: RESTful web services
+- **EJB**: Business logic layer
+- **PostgreSQL 17**: Relational database
+- **WildFly 38**: Application server
+
+### Frontend
+- **HTML5**: Modern markup
+- **CSS3**: Responsive design with gradients and animations
+- **Vanilla JavaScript**: No framework dependencies
+- **Fetch API**: Asynchronous data operations
+
+### Standards
+- **FHIR R4**: Healthcare interoperability standard
+- **RESTful**: API design principles
+- **JSON**: Data interchange format
+
+## Prerequisites
+
+- **Java 17** or higher
+- **Maven 3.8+** for building
+- **PostgreSQL 17** (or compatible version)
+- **WildFly 38** (or compatible Jakarta EE 10 server)
+
+## Quick Start
+
+### 1. Database Setup
+
+```bash
+# Create PostgreSQL database and user
+sudo -u postgres psql
+
+CREATE USER hospital_admin WITH PASSWORD 'dbpassword';
+CREATE DATABASE hospital_db OWNER hospital_admin;
+GRANT ALL PRIVILEGES ON DATABASE hospital_db TO hospital_admin;
+\q
+
+# Import database schema
+psql -U hospital_admin -d hospital_db -f hospital_db.sql
+
+# Import EPA extensions
+psql -U hospital_admin -d hospital_db -f hospital_db_ema_migration.sql
+```
+
+### 2. WildFly Configuration
+
+#### Install PostgreSQL JDBC Driver
+
+```bash
+# Create module directory
+mkdir -p $JBOSS_HOME/modules/system/layers/base/org/postgresql/main
+
+# Download JDBC driver
+wget https://jdbc.postgresql.org/download/postgresql-42.7.4.jar \
+  -O $JBOSS_HOME/modules/system/layers/base/org/postgresql/main/postgresql.jar
+
+# Create module.xml
+cat > $JBOSS_HOME/modules/system/layers/base/org/postgresql/main/module.xml << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.9" name="org.postgresql">
+    <resources>
+        <resource-root path="postgresql.jar"/>
+    </resources>
+    <dependencies>
+        <module name="javax.api"/>
+        <module name="javax.transaction.api"/>
+    </dependencies>
+</module>
+EOF
+```
+
+#### Configure DataSource
+
+```bash
+# Start WildFly
+$JBOSS_HOME/bin/standalone.sh &
+
+# Add PostgreSQL driver
+$JBOSS_HOME/bin/jboss-cli.sh --connect \
+  --command="/subsystem=datasources/jdbc-driver=postgresql:add(driver-name=postgresql,driver-module-name=org.postgresql,driver-class-name=org.postgresql.Driver)"
+
+# Add datasource
+$JBOSS_HOME/bin/jboss-cli.sh --connect \
+  --command="data-source add \
+    --name=PostgresDS \
+    --jndi-name=java:/PostgresDS \
+    --driver-name=postgresql \
+    --connection-url=jdbc:postgresql://localhost:5432/hospital_db \
+    --user-name=hospital_admin \
+    --password=dbpassword \
+    --use-ccm=true \
+    --max-pool-size=25 \
+    --blocking-timeout-wait-millis=5000 \
+    --enabled=true \
+    --driver-class=org.postgresql.Driver \
+    --jta=true \
+    --use-java-context=true"
+
+# Test connection
+$JBOSS_HOME/bin/jboss-cli.sh --connect \
+  --command="/subsystem=datasources/data-source=PostgresDS:test-connection-in-pool"
+```
+
+### 3. Build and Deploy
+
+```bash
+# Clone the repository
+git clone https://github.com/hjstephan/hospital-system.git
+cd hospital-system
+
+# Build with Maven
+mvn clean package
+
+# Deploy to WildFly
+cp target/hospital-management.war $JBOSS_HOME/standalone/deployments/
+```
+
+### 4. Access the Application
+
+- **Main Application**: http://localhost:8080/hospital-management
+- **WildFly Admin Console**: http://localhost:9990
+
+## Project Structure
 
 ```
 hospital-system/
-├─ pom.xml                    # Maven project file
-├─ README.md                  # This file (English)
-├─ README-setup-wildfly-postgres.md
-├─ scripts/
-│  └─ setup-wildfly-postgres.sh  # helper script for DB + WildFly setup
-├─ src/
-│  ├─ main/
-│  │  ├─ java/
-│  │  │  └─ com/hospital/
-│  │  │     ├─ entity/         # JPA entities (Patient, Diagnosis, Medication)
-│  │  │     ├─ epa/            # EPA integration service & helpers
-│  │  │     └─ rest/           # JAX-RS resources (PatientResource, EPAResource)
-│  │  ├─ resources/
-│  │  │  └─ META-INF/persistence.xml  # JPA persistence unit (JNDI name hospitalPU)
-│  │  └─ webapp/
-│  │     └─ index.html         # simple single-file UI for demonstration
-└─ target/                    # build artifacts (generated by Maven)
+├── src/
+│   └── main/
+│       ├── java/com/hospital/
+│       │   ├── entity/          # JPA entities
+│       │   │   ├── Patient.java
+│       │   │   ├── Diagnosis.java
+│       │   │   └── Medication.java
+│       │   ├── rest/            # REST endpoints
+│       │   │   ├── PatientResource.java
+│       │   │   └── EPAResource.java
+│       │   └── epa/             # EPA integration
+│       │       ├── EPAIntegrationService.java
+│       │       └── FHIRConverter.java
+│       ├── resources/
+│       │   └── META-INF/
+│       │       └── persistence.xml
+│       └── webapp/
+│           └── index.html       # Frontend application
+├── hospital_db.sql              # Database schema
+├── hospital_db_ema_migration.sql # EPA extensions
+└── pom.xml                      # Maven configuration
 ```
 
-## What this project contains
+## API Endpoints
 
-- Java backend: JAX-RS endpoints in `com.hospital.rest` exposing patient CRUD and EPA actions.
-- JPA entities: `com.hospital.entity` contains domain types (Patient, Diagnosis, Medication).
-- EPA integration: `com.hospital.epa` contains `EPAIntegrationService` and small DTOs used to call an external EPA system (FHIR over HTTP).
-- Minimal frontend: a single `index.html` providing a lightweight UI that talks to the REST API.
-- Helper script: `scripts/setup-wildfly-postgres.sh` automates common tasks for local setup (DB user, DB creation, JDBC driver module, datasource creation). See `README-setup-wildfly-postgres.md` for details.
+### Patient Management
 
-## Build and package
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/patients` | Get all patients |
+| GET | `/api/patients?status=active` | Get active patients |
+| GET | `/api/patients/{id}` | Get patient by ID |
+| GET | `/api/patients/search?q={query}` | Search patients |
+| POST | `/api/patients` | Create new patient |
+| PUT | `/api/patients/{id}` | Update patient |
+| DELETE | `/api/patients/{id}` | Delete patient |
 
-This is a Maven WAR project. To build:
+### EPA Integration
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/epa/sync/{patientId}` | Sync patient to EPA |
+| POST | `/api/epa/sync-all` | Sync all patients |
+| PUT | `/api/epa/consent/{patientId}?enabled=true` | Set EPA consent |
+| GET | `/api/epa/status/{patientId}` | Get EPA sync status |
+| GET | `/api/epa/fetch/{epaId}` | Fetch from EPA |
+| GET | `/api/epa/test-connection` | Test EPA connection |
+| GET | `/api/epa/statistics` | Get sync statistics |
+
+## Database Schema
+
+### Main Tables
+
+- **patients**: Core patient information with EPA fields
+- **diagnoses**: Patient diagnoses and medical conditions
+- **medications**: Prescribed medications and treatments
+- **epa_sync_log**: Audit trail for EPA synchronization
+- **epa_configuration**: EPA system configuration
+
+### Key Fields
+
+**Patients Table:**
+- Personal data (name, DOB, gender, contact)
+- Medical data (blood type, allergies)
+- Emergency contacts
+- EPA integration fields (epa_id, sync_status, consent)
+
+## EPA Integration
+
+The system implements FHIR R4 standard for healthcare interoperability:
+
+### Configuration
+
+Set environment variables:
 
 ```bash
+export EPA_BASE_URL="https://your-epa-system.com/api"
+export EPA_API_KEY="your-api-key"
+```
+
+### Patient Consent
+
+Patients must provide explicit consent for EPA synchronization:
+
+```java
+// Enable EPA for a patient
+PUT /api/epa/consent/{patientId}?enabled=true
+```
+
+### FHIR Mapping
+
+The system converts patient data to FHIR R4 format:
+
+- Patient resource with identifiers
+- Demographics (name, gender, birthDate)
+- Contact information (telecom, address)
+- Extensions for blood type and allergies
+- Emergency contacts
+
+## 🧪 Testing
+
+### Manual Testing
+
+```bash
+# Get all patients
+curl http://localhost:8080/hospital-management/api/patients
+
+# Create a patient
+curl -X POST http://localhost:8080/hospital-management/api/patients \
+  -H "Content-Type: application/json" \
+  -d '{
+    "firstName": "John",
+    "lastName": "Doe",
+    "dateOfBirth": "1990-01-01",
+    "gender": "Männlich",
+    "insuranceNumber": "INS-2024-999",
+    "epaEnabled": true
+  }'
+
+# Sync to EPA
+curl -X POST http://localhost:8080/hospital-management/api/epa/sync/1
+```
+
+### Run Unit Tests
+
+```bash
+mvn test
+```
+
+## Features Detail
+
+### Patient Management
+- Complete patient records with medical history
+- Advanced search and filtering
+- Status management (active/discharged)
+- Real-time updates
+
+### EPA Synchronization
+- FHIR R4 compliant data exchange
+- Automatic sync on data changes
+- Error handling and retry logic
+- Detailed sync status tracking
+
+### Security
+- Patient consent management
+- Secure password storage
+- Data validation
+- Audit logging
+
+## Configuration
+
+### persistence.xml
+
+Located in `src/main/resources/META-INF/persistence.xml`:
+
+```xml
+<persistence-unit name="hospitalPU" transaction-type="JTA">
+    <jta-data-source>java:/PostgresDS</jta-data-source>
+    <!-- Entity classes -->
+    <properties>
+        <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
+        <property name="hibernate.hbm2ddl.auto" value="update"/>
+    </properties>
+</persistence-unit>
+```
+
+### Database Connection
+
+Modify in WildFly configuration or use environment variables:
+
+```bash
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=hospital_db
+DB_USER=hospital_admin
+DB_PASSWORD=dbpassword
+```
+
+## Troubleshooting
+
+### Database Connection Issues
+
+```bash
+# Check PostgreSQL is running
+sudo systemctl status postgresql
+
+# Verify database exists
+psql -U hospital_admin -d hospital_db -c "\dt"
+
+# Test datasource from WildFly
+$JBOSS_HOME/bin/jboss-cli.sh --connect \
+  --command="/subsystem=datasources/data-source=PostgresDS:test-connection-in-pool"
+```
+
+### Deployment Issues
+
+```bash
+# Check WildFly logs
+tail -f $JBOSS_HOME/standalone/log/server.log
+
+# Verify deployment
+ls -l $JBOSS_HOME/standalone/deployments/
+
+# Redeploy
+rm $JBOSS_HOME/standalone/deployments/hospital-management.war
+cp target/hospital-management.war $JBOSS_HOME/standalone/deployments/
+```
+
+### EPA Integration Issues
+
+```bash
+# Test EPA connection
+curl http://localhost:8080/hospital-management/api/epa/test-connection
+
+# Check sync status
+curl http://localhost:8080/hospital-management/api/epa/statistics
+```
+
+## Development
+
+### Building from Source
+
+```bash
+# Clone repository
+git clone https://github.com/hjstephan/hospital-system.git
+cd hospital-system
+
+# Build
 mvn clean package
+
+# Run tests
+mvn test
+
+# Skip tests
+mvn clean package -DskipTests
 ```
 
-The produced artifact is `target/hospital-management.war`.
+### IDE Setup
 
-## Deployment (WildFly)
+**IntelliJ IDEA:**
+1. Import as Maven project
+2. Configure WildFly server
+3. Set up database connection
 
-The app is intended for WildFly / JBoss AS. The persistence unit used in code is named `hospitalPU` and expects a JTA datasource bound to `java:jboss/datasources/HospitalDS`.
+**Eclipse:**
+1. Import Maven project
+2. Add WildFly runtime
+3. Configure server runtime environment
 
-To deploy manually:
+## Contributing
 
-```bash
-cp target/hospital-management.war /opt/wildfly/standalone/deployments/
-# or with CLI
-/opt/wildfly/bin/jboss-cli.sh --connect --command='deploy /path/to/target/hospital-management.war'
-```
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-## Database
+## Acknowledgments
 
-- The project uses PostgreSQL. The helper script expects a database named `hospitaldb` and a DB user `hospitaluser` by default.
-- To apply the included SQL schemas (if you have not already), run the helper script from the repo root:
+- Jakarta EE community
+- FHIR community
+- PostgreSQL team
+- WildFly project
 
-```bash
-sudo DB_PASS='dbpassword' SET_DB_PASS=true IMPORT_SQL=true ./scripts/setup-wildfly-postgres.sh
-```
+## Support
 
-## Front-end
+For issues and questions:
+- Create an issue on GitHub
+- Check existing documentation
+- Review WildFly and PostgreSQL documentation
 
-- `src/main/webapp/index.html` is a self-contained frontend. It communicates with the backend at two base paths used in the code:
-  - `/hospital-management/api/patients`
-  - `/hospital-management/api/epa`
+## Future Enhancements
 
-## Troubleshooting / Known issues
-
-- EPA test returns 503 (Service Unavailable): the backend endpoint `api/epa/test-connection` indicated the external EPA could not be reached (or timed out). Check `EPA_BASE_URL` and `EPA_API_KEY` environment variables and WildFly logs for details.
-
-- 500 when calling `api/patients` with JSON-B serialization error for `diagnoses`: JSON-B failed to serialize entity relationships (common with bidirectional JPA relations and lazy proxies). To mitigate this:
-  - Short-term: some relationships were marked with `@JsonbTransient` to avoid serialization cycles.
-  - Recommended long-term: map entities to DTOs in the REST layer (PatientDTO) so the API responses are explicit and stable.
-
-## Development notes
-
-- To run a full rebuild use `mvn clean package`.
-- If you change entity mappings, re-generate the WAR and redeploy. Watch the server logs for deployment errors.
+- Advanced reporting and analytics
+- Multi-language support
+- Role-based access control
+- Document management
+- Appointment scheduling
+- Integration with medical devices
+- Mobile applications
+- Real-time notifications
