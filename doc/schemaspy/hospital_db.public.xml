@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<database name="hospital_db" schema="public" type="PostgreSQL - 16.11 (Ubuntu 16.11-0ubuntu0.24.04.1)">
+   <sequences>
+      <sequence increment="1" name="diagnoses_id_seq" startValue="1"/>
+      <sequence increment="1" name="epa_configuration_id_seq" startValue="1"/>
+      <sequence increment="1" name="epa_sync_log_id_seq" startValue="1"/>
+      <sequence increment="1" name="medications_id_seq" startValue="1"/>
+      <sequence increment="1" name="patients_id_seq" startValue="1"/>
+   </sequences>
+   <tables>
+      <table catalog="hospital_db" name="diagnoses" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('diagnoses_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="patient_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+            <parent catalog="hospital_db" column="id" foreignKey="diagnoses_patient_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="patients"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="diagnosis_code" nullable="true" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="diagnosis_name" nullable="false" remarks="" size="200" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="4" name="diagnosis_date" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="doctor_name" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="notes" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="7" name="created_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="description" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="diagnoses_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_diagnoses_patient" unique="false">
+            <column ascending="true" name="patient_id"/>
+         </index>
+      </table>
+      <table catalog="hospital_db" name="epa_configuration" remarks="Konfigurationsparameter für EPA-Integration" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('epa_configuration_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="config_key" nullable="false" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="config_value" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="description" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="4" name="last_updated" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="updated_by" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="epa_configuration_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="epa_configuration_config_key_key" unique="true">
+            <column ascending="true" name="config_key"/>
+         </index>
+      </table>
+      <table catalog="hospital_db" name="epa_statistics" numRows="0" remarks="" schema="public" type="VIEW" viewSql=" SELECT count(*) AS total_patients,&#10;    sum(&#10;        CASE&#10;            WHEN (epa_enabled = true) THEN 1&#10;            ELSE 0&#10;        END) AS epa_enabled_count,&#10;    sum(&#10;        CASE&#10;            WHEN ((epa_sync_status)::text = 'synced'::text) THEN 1&#10;            ELSE 0&#10;        END) AS synced_count,&#10;    sum(&#10;        CASE&#10;            WHEN ((epa_sync_status)::text = 'pending'::text) THEN 1&#10;            ELSE 0&#10;        END) AS pending_count,&#10;    sum(&#10;        CASE&#10;            WHEN ((epa_sync_status)::text = 'error'::text) THEN 1&#10;            ELSE 0&#10;        END) AS error_count,&#10;    max(epa_last_sync) AS last_successful_sync&#10;   FROM patients;">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="total_patients" nullable="true" remarks="" size="19" type="int8" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="epa_enabled_count" nullable="true" remarks="" size="19" type="int8" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="synced_count" nullable="true" remarks="" size="19" type="int8" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="pending_count" nullable="true" remarks="" size="19" type="int8" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="error_count" nullable="true" remarks="" size="19" type="int8" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="5" name="last_successful_sync" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+      </table>
+      <table catalog="hospital_db" name="epa_sync_log" remarks="Audit-Log für alle EPA-Synchronisationsvorgänge" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('epa_sync_log_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="patient_id" nullable="true" remarks="" size="10" type="int4" typeCode="4">
+            <parent catalog="hospital_db" column="id" foreignKey="epa_sync_log_patient_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="patients"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="sync_type" nullable="false" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="sync_status" nullable="false" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="epa_id" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="fhir_payload" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="error_message" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="7" name="sync_timestamp" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="sync_duration_ms" nullable="true" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="user_id" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="epa_sync_log_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_epa_sync_log_patient" unique="false">
+            <column ascending="true" name="patient_id"/>
+         </index>
+         <index name="idx_epa_sync_log_status" unique="false">
+            <column ascending="true" name="sync_status"/>
+         </index>
+         <index name="idx_epa_sync_log_timestamp" unique="false">
+            <column ascending="true" name="sync_timestamp"/>
+         </index>
+      </table>
+      <table catalog="hospital_db" name="medications" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('medications_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="patient_id" nullable="true" remarks="" size="19" type="int8" typeCode="-5">
+            <parent catalog="hospital_db" column="id" foreignKey="medications_patient_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="patients"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="medication_name" nullable="false" remarks="" size="200" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="dosage" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="frequency" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="start_date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="end_date" nullable="true" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="prescribed_by" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="notes" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="9" name="created_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="name" nullable="true" remarks="" size="200" type="varchar" typeCode="12"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="medications_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_medications_patient" unique="false">
+            <column ascending="true" name="patient_id"/>
+         </index>
+      </table>
+      <table catalog="hospital_db" name="patients" numRows="3" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('patients_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5">
+            <child catalog="hospital_db" column="patient_id" foreignKey="diagnoses_patient_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="diagnoses"/>
+            <child catalog="hospital_db" column="patient_id" foreignKey="epa_sync_log_patient_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="epa_sync_log"/>
+            <child catalog="hospital_db" column="patient_id" foreignKey="medications_patient_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="medications"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="first_name" nullable="false" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="last_name" nullable="false" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="date_of_birth" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="gender" nullable="false" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="phone" nullable="true" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="email" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="address" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="insurance_number" nullable="false" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="blood_type" nullable="true" remarks="" size="5" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="allergies" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="emergency_contact_name" nullable="true" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="emergency_contact_phone" nullable="true" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="13" name="admission_date" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="14" name="discharge_date" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="'active'::character varying" digits="0" id="15" name="status" nullable="true" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="16" name="created_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="CURRENT_TIMESTAMP" digits="6" id="17" name="updated_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="18" name="epa_id" nullable="true" remarks="Eindeutige ID des Patienten in der elektronischen Patientenakte" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="'pending'::character varying" digits="0" id="19" name="epa_sync_status" nullable="true" remarks="Status der EPA-Synchronisation: pending, synced, error, disabled" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="20" name="epa_last_sync" nullable="true" remarks="Zeitpunkt der letzten erfolgreichen EPA-Synchronisation" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="21" name="epa_sync_error" nullable="true" remarks="Fehlermeldung bei gescheiterter EPA-Synchronisation" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="true" digits="0" id="22" name="epa_enabled" nullable="true" remarks="Gibt an, ob Patient der EPA-Synchronisation zugestimmt hat" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="23" name="epa_consent_date" nullable="true" remarks="Datum der EPA-Einwilligungserklärung" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="patients_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_patients_epa_enabled" unique="false">
+            <column ascending="true" name="epa_enabled"/>
+         </index>
+         <index name="idx_patients_epa_id" unique="false">
+            <column ascending="true" name="epa_id"/>
+         </index>
+         <index name="idx_patients_epa_sync_status" unique="false">
+            <column ascending="true" name="epa_sync_status"/>
+         </index>
+         <index name="idx_patients_insurance" unique="false">
+            <column ascending="true" name="insurance_number"/>
+         </index>
+         <index name="idx_patients_last_name" unique="false">
+            <column ascending="true" name="last_name"/>
+         </index>
+         <index name="patients_epa_id_key" unique="true">
+            <column ascending="true" name="epa_id"/>
+         </index>
+         <index name="patients_insurance_number_key" unique="true">
+            <column ascending="true" name="insurance_number"/>
+         </index>
+      </table>
+   </tables>
+</database>

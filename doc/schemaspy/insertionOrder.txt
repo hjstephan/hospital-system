@@ -1,0 +1,5 @@
+patients
+diagnoses
+epa_sync_log
+medications
+epa_configuration
