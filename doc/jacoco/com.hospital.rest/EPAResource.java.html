@@ -26,9 +26,9 @@ import jakarta.ws.rs.core.Response;
 @Path(&quot;/epa&quot;)
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-<span class="nc" id="L29">public class EPAResource {</span>
+<span class="fc" id="L29">public class EPAResource {</span>
 
-<span class="nc" id="L31">    private static final Logger LOGGER = Logger.getLogger(EPAResource.class.getName());</span>
+<span class="fc" id="L31">    private static final Logger LOGGER = Logger.getLogger(EPAResource.class.getName());</span>
 
     @PersistenceContext(unitName = &quot;hospitalPU&quot;)
     private EntityManager em;
@@ -43,34 +43,34 @@ import jakarta.ws.rs.core.Response;
     @Path(&quot;/sync/{patientId}&quot;)
     public Response syncPatientToEPA(@PathParam(&quot;patientId&quot;) Long patientId) {
         try {
-<span class="nc" id="L46">            Patient patient = em.find(Patient.class, patientId);</span>
-<span class="nc bnc" id="L47" title="All 2 branches missed.">            if (patient == null) {</span>
-<span class="nc" id="L48">                return Response.status(Response.Status.NOT_FOUND)</span>
-<span class="nc" id="L49">                        .entity(&quot;{\&quot;error\&quot;: \&quot;Patient nicht gefunden\&quot;}&quot;).build();</span>
+<span class="fc" id="L46">            Patient patient = em.find(Patient.class, patientId);</span>
+<span class="fc bfc" id="L47" title="All 2 branches covered.">            if (patient == null) {</span>
+<span class="fc" id="L48">                return Response.status(Response.Status.NOT_FOUND)</span>
+<span class="fc" id="L49">                        .entity(&quot;{\&quot;error\&quot;: \&quot;Patient nicht gefunden\&quot;}&quot;).build();</span>
             }
 
             // Prüfe EPA-Einwilligung
-<span class="nc bnc" id="L53" title="All 2 branches missed.">            if (!Boolean.TRUE.equals(patient.getEpaEnabled())) {</span>
-<span class="nc" id="L54">                return Response.status(Response.Status.FORBIDDEN)</span>
-<span class="nc" id="L55">                        .entity(&quot;{\&quot;error\&quot;: \&quot;Patient hat keine EPA-Einwilligung erteilt\&quot;}&quot;).build();</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">            if (!Boolean.TRUE.equals(patient.getEpaEnabled())) {</span>
+<span class="fc" id="L54">                return Response.status(Response.Status.FORBIDDEN)</span>
+<span class="fc" id="L55">                        .entity(&quot;{\&quot;error\&quot;: \&quot;Patient hat keine EPA-Einwilligung erteilt\&quot;}&quot;).build();</span>
             }
 
             // Sende an EPA
-<span class="nc" id="L59">            var result = epaService.sendPatientToEPA(patient);</span>
+<span class="fc" id="L59">            var result = epaService.sendPatientToEPA(patient);</span>
 
-<span class="nc bnc" id="L61" title="All 2 branches missed.">            if (result.isSuccess()) {</span>
+<span class="pc bpc" id="L61" title="1 of 2 branches missed.">            if (result.isSuccess()) {</span>
                 // Aktualisiere Patient mit EPA-Informationen
-<span class="nc" id="L63">                patient.setEpaId(result.getEpaId());</span>
-<span class="nc" id="L64">                patient.setEpaSyncStatus(&quot;synced&quot;);</span>
-<span class="nc" id="L65">                patient.setEpaLastSync(LocalDateTime.now());</span>
-<span class="nc" id="L66">                patient.setEpaSyncError(null);</span>
-<span class="nc" id="L67">                em.merge(patient);</span>
-<span class="nc" id="L68">                em.flush();</span>
+<span class="fc" id="L63">                patient.setEpaId(result.getEpaId());</span>
+<span class="fc" id="L64">                patient.setEpaSyncStatus(&quot;synced&quot;);</span>
+<span class="fc" id="L65">                patient.setEpaLastSync(LocalDateTime.now());</span>
+<span class="fc" id="L66">                patient.setEpaSyncError(null);</span>
+<span class="fc" id="L67">                em.merge(patient);</span>
+<span class="fc" id="L68">                em.flush();</span>
 
-<span class="nc" id="L70">                return Response.ok()</span>
-<span class="nc" id="L71">                        .entity(&quot;{\&quot;success\&quot;: true, \&quot;message\&quot;: \&quot;&quot; + result.getMessage() +</span>
-<span class="nc" id="L72">                                &quot;\&quot;, \&quot;epaId\&quot;: \&quot;&quot; + result.getEpaId() + &quot;\&quot;}&quot;)</span>
-<span class="nc" id="L73">                        .build();</span>
+<span class="fc" id="L70">                return Response.ok()</span>
+<span class="fc" id="L71">                        .entity(&quot;{\&quot;success\&quot;: true, \&quot;message\&quot;: \&quot;&quot; + result.getMessage() +</span>
+<span class="fc" id="L72">                                &quot;\&quot;, \&quot;epaId\&quot;: \&quot;&quot; + result.getEpaId() + &quot;\&quot;}&quot;)</span>
+<span class="fc" id="L73">                        .build();</span>
             } else {
                 // Speichere Fehler
 <span class="nc" id="L76">                patient.setEpaSyncStatus(&quot;error&quot;);</span>
@@ -96,17 +96,17 @@ import jakarta.ws.rs.core.Response;
     @Path(&quot;/sync-all&quot;)
     public Response syncAllPatientsToEPA() {
         try {
-<span class="nc" id="L99">            List&lt;Patient&gt; patients = em.createNamedQuery(&quot;Patient.findActive&quot;, Patient.class)</span>
-<span class="nc" id="L100">                    .getResultList();</span>
+<span class="fc" id="L99">            List&lt;Patient&gt; patients = em.createNamedQuery(&quot;Patient.findActive&quot;, Patient.class)</span>
+<span class="fc" id="L100">                    .getResultList();</span>
 
             // Filtere nur Patienten mit EPA-Einwilligung
-<span class="nc" id="L103">            List&lt;Patient&gt; epaEnabledPatients = patients.stream()</span>
-<span class="nc" id="L104">                    .filter(p -&gt; Boolean.TRUE.equals(p.getEpaEnabled()))</span>
-<span class="nc" id="L105">                    .toList();</span>
+<span class="fc" id="L103">            List&lt;Patient&gt; epaEnabledPatients = patients.stream()</span>
+<span class="fc" id="L104">                    .filter(p -&gt; Boolean.TRUE.equals(p.getEpaEnabled()))</span>
+<span class="fc" id="L105">                    .toList();</span>
 
-<span class="nc bnc" id="L107" title="All 2 branches missed.">            if (epaEnabledPatients.isEmpty()) {</span>
-<span class="nc" id="L108">                return Response.ok()</span>
-<span class="nc" id="L109">                        .entity(&quot;{\&quot;message\&quot;: \&quot;Keine Patienten mit EPA-Einwilligung gefunden\&quot;}&quot;).build();</span>
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">            if (epaEnabledPatients.isEmpty()) {</span>
+<span class="fc" id="L108">                return Response.ok()</span>
+<span class="fc" id="L109">                        .entity(&quot;{\&quot;message\&quot;: \&quot;Keine Patienten mit EPA-Einwilligung gefunden\&quot;}&quot;).build();</span>
             }
 
 <span class="nc" id="L112">            var result = epaService.syncAllPatientsToEPA(epaEnabledPatients);</span>
@@ -132,26 +132,26 @@ import jakarta.ws.rs.core.Response;
     public Response setEPAConsent(@PathParam(&quot;patientId&quot;) Long patientId,
             @QueryParam(&quot;enabled&quot;) boolean enabled) {
         try {
-<span class="nc" id="L135">            Patient patient = em.find(Patient.class, patientId);</span>
-<span class="nc bnc" id="L136" title="All 2 branches missed.">            if (patient == null) {</span>
+<span class="fc" id="L135">            Patient patient = em.find(Patient.class, patientId);</span>
+<span class="pc bpc" id="L136" title="1 of 2 branches missed.">            if (patient == null) {</span>
 <span class="nc" id="L137">                return Response.status(Response.Status.NOT_FOUND)</span>
 <span class="nc" id="L138">                        .entity(&quot;{\&quot;error\&quot;: \&quot;Patient nicht gefunden\&quot;}&quot;).build();</span>
             }
 
-<span class="nc" id="L141">            patient.setEpaEnabled(enabled);</span>
-<span class="nc bnc" id="L142" title="All 2 branches missed.">            if (enabled) {</span>
-<span class="nc" id="L143">                patient.setEpaConsentDate(LocalDateTime.now());</span>
-<span class="nc" id="L144">                patient.setEpaSyncStatus(&quot;pending&quot;);</span>
+<span class="fc" id="L141">            patient.setEpaEnabled(enabled);</span>
+<span class="pc bpc" id="L142" title="1 of 2 branches missed.">            if (enabled) {</span>
+<span class="fc" id="L143">                patient.setEpaConsentDate(LocalDateTime.now());</span>
+<span class="fc" id="L144">                patient.setEpaSyncStatus(&quot;pending&quot;);</span>
             } else {
 <span class="nc" id="L146">                patient.setEpaSyncStatus(&quot;disabled&quot;);</span>
             }
 
-<span class="nc" id="L149">            em.merge(patient);</span>
-<span class="nc" id="L150">            em.flush();</span>
+<span class="fc" id="L149">            em.merge(patient);</span>
+<span class="fc" id="L150">            em.flush();</span>
 
-<span class="nc bnc" id="L152" title="All 2 branches missed.">            String message = enabled ? &quot;EPA-Einwilligung erteilt&quot; : &quot;EPA-Einwilligung widerrufen&quot;;</span>
-<span class="nc" id="L153">            return Response.ok()</span>
-<span class="nc" id="L154">                    .entity(&quot;{\&quot;success\&quot;: true, \&quot;message\&quot;: \&quot;&quot; + message + &quot;\&quot;}&quot;).build();</span>
+<span class="pc bpc" id="L152" title="1 of 2 branches missed.">            String message = enabled ? &quot;EPA-Einwilligung erteilt&quot; : &quot;EPA-Einwilligung widerrufen&quot;;</span>
+<span class="fc" id="L153">            return Response.ok()</span>
+<span class="fc" id="L154">                    .entity(&quot;{\&quot;success\&quot;: true, \&quot;message\&quot;: \&quot;&quot; + message + &quot;\&quot;}&quot;).build();</span>
 
 <span class="nc" id="L156">        } catch (Exception e) {</span>
 <span class="nc" id="L157">            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)</span>
@@ -166,22 +166,22 @@ import jakarta.ws.rs.core.Response;
     @Path(&quot;/status/{patientId}&quot;)
     public Response getEPAStatus(@PathParam(&quot;patientId&quot;) Long patientId) {
         try {
-<span class="nc" id="L169">            Patient patient = em.find(Patient.class, patientId);</span>
-<span class="nc bnc" id="L170" title="All 2 branches missed.">            if (patient == null) {</span>
+<span class="fc" id="L169">            Patient patient = em.find(Patient.class, patientId);</span>
+<span class="pc bpc" id="L170" title="1 of 2 branches missed.">            if (patient == null) {</span>
 <span class="nc" id="L171">                return Response.status(Response.Status.NOT_FOUND)</span>
 <span class="nc" id="L172">                        .entity(&quot;{\&quot;error\&quot;: \&quot;Patient nicht gefunden\&quot;}&quot;).build();</span>
             }
 
-<span class="nc" id="L175">            String response = String.format(</span>
+<span class="fc" id="L175">            String response = String.format(</span>
                     &quot;{\&quot;epaEnabled\&quot;: %b, \&quot;epaId\&quot;: \&quot;%s\&quot;, \&quot;syncStatus\&quot;: \&quot;%s\&quot;, &quot; +
                             &quot;\&quot;lastSync\&quot;: \&quot;%s\&quot;, \&quot;syncError\&quot;: \&quot;%s\&quot;}&quot;,
-<span class="nc" id="L178">                    patient.getEpaEnabled(),</span>
-<span class="nc bnc" id="L179" title="All 2 branches missed.">                    patient.getEpaId() != null ? patient.getEpaId() : &quot;&quot;,</span>
-<span class="nc" id="L180">                    patient.getEpaSyncStatus(),</span>
-<span class="nc bnc" id="L181" title="All 2 branches missed.">                    patient.getEpaLastSync() != null ? patient.getEpaLastSync().toString() : &quot;&quot;,</span>
-<span class="nc bnc" id="L182" title="All 2 branches missed.">                    patient.getEpaSyncError() != null ? patient.getEpaSyncError() : &quot;&quot;);</span>
+<span class="fc" id="L178">                    patient.getEpaEnabled(),</span>
+<span class="pc bpc" id="L179" title="1 of 2 branches missed.">                    patient.getEpaId() != null ? patient.getEpaId() : &quot;&quot;,</span>
+<span class="fc" id="L180">                    patient.getEpaSyncStatus(),</span>
+<span class="pc bpc" id="L181" title="1 of 2 branches missed.">                    patient.getEpaLastSync() != null ? patient.getEpaLastSync().toString() : &quot;&quot;,</span>
+<span class="pc bpc" id="L182" title="1 of 2 branches missed.">                    patient.getEpaSyncError() != null ? patient.getEpaSyncError() : &quot;&quot;);</span>
 
-<span class="nc" id="L184">            return Response.ok(response).build();</span>
+<span class="fc" id="L184">            return Response.ok(response).build();</span>
 
 <span class="nc" id="L186">        } catch (Exception e) {</span>
 <span class="nc" id="L187">            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)</span>
@@ -196,13 +196,13 @@ import jakarta.ws.rs.core.Response;
     @Path(&quot;/fetch/{epaId}&quot;)
     public Response fetchFromEPA(@PathParam(&quot;epaId&quot;) String epaId) {
         try {
-<span class="nc" id="L199">            String fhirData = epaService.getPatientFromEPA(epaId);</span>
+<span class="fc" id="L199">            String fhirData = epaService.getPatientFromEPA(epaId);</span>
 
-<span class="nc bnc" id="L201" title="All 2 branches missed.">            if (fhirData != null) {</span>
+<span class="pc bpc" id="L201" title="1 of 2 branches missed.">            if (fhirData != null) {</span>
 <span class="nc" id="L202">                return Response.ok(fhirData).build();</span>
             } else {
-<span class="nc" id="L204">                return Response.status(Response.Status.NOT_FOUND)</span>
-<span class="nc" id="L205">                        .entity(&quot;{\&quot;error\&quot;: \&quot;Patient nicht in EPA gefunden\&quot;}&quot;).build();</span>
+<span class="fc" id="L204">                return Response.status(Response.Status.NOT_FOUND)</span>
+<span class="fc" id="L205">                        .entity(&quot;{\&quot;error\&quot;: \&quot;Patient nicht in EPA gefunden\&quot;}&quot;).build();</span>
             }
 
 <span class="nc" id="L208">        } catch (Exception e) {</span>
@@ -218,14 +218,14 @@ import jakarta.ws.rs.core.Response;
     @Path(&quot;/test-connection&quot;)
     public Response testConnection() {
         try {
-<span class="nc" id="L221">            boolean connected = epaService.testEPAConnection();</span>
+<span class="fc" id="L221">            boolean connected = epaService.testEPAConnection();</span>
 
-<span class="nc bnc" id="L223" title="All 2 branches missed.">            if (connected) {</span>
-<span class="nc" id="L224">                return Response.ok()</span>
-<span class="nc" id="L225">                        .entity(&quot;{\&quot;connected\&quot;: true, \&quot;message\&quot;: \&quot;EPA-Verbindung erfolgreich\&quot;}&quot;).build();</span>
+<span class="fc bfc" id="L223" title="All 2 branches covered.">            if (connected) {</span>
+<span class="fc" id="L224">                return Response.ok()</span>
+<span class="fc" id="L225">                        .entity(&quot;{\&quot;connected\&quot;: true, \&quot;message\&quot;: \&quot;EPA-Verbindung erfolgreich\&quot;}&quot;).build();</span>
             } else {
-<span class="nc" id="L227">                return Response.status(Response.Status.SERVICE_UNAVAILABLE)</span>
-<span class="nc" id="L228">                        .entity(&quot;{\&quot;connected\&quot;: false, \&quot;message\&quot;: \&quot;EPA nicht erreichbar\&quot;}&quot;).build();</span>
+<span class="fc" id="L227">                return Response.status(Response.Status.SERVICE_UNAVAILABLE)</span>
+<span class="fc" id="L228">                        .entity(&quot;{\&quot;connected\&quot;: false, \&quot;message\&quot;: \&quot;EPA nicht erreichbar\&quot;}&quot;).build();</span>
             }
 
 <span class="nc" id="L231">        } catch (Exception e) {</span>
@@ -241,26 +241,26 @@ import jakarta.ws.rs.core.Response;
     @Path(&quot;/statistics&quot;)
     public Response getEPAStatistics() {
         try {
-<span class="nc" id="L244">            Long totalPatients = em.createQuery(&quot;SELECT COUNT(p) FROM Patient p&quot;, Long.class)</span>
-<span class="nc" id="L245">                    .getSingleResult();</span>
+<span class="fc" id="L244">            Long totalPatients = em.createQuery(&quot;SELECT COUNT(p) FROM Patient p&quot;, Long.class)</span>
+<span class="fc" id="L245">                    .getSingleResult();</span>
 
-<span class="nc" id="L247">            Long epaEnabledCount = em.createQuery(</span>
+<span class="fc" id="L247">            Long epaEnabledCount = em.createQuery(</span>
                     &quot;SELECT COUNT(p) FROM Patient p WHERE p.epaEnabled = true&quot;, Long.class)
-<span class="nc" id="L249">                    .getSingleResult();</span>
+<span class="fc" id="L249">                    .getSingleResult();</span>
 
-<span class="nc" id="L251">            Long syncedCount = em.createQuery(</span>
+<span class="fc" id="L251">            Long syncedCount = em.createQuery(</span>
                     &quot;SELECT COUNT(p) FROM Patient p WHERE p.epaSyncStatus = 'synced'&quot;, Long.class)
-<span class="nc" id="L253">                    .getSingleResult();</span>
+<span class="fc" id="L253">                    .getSingleResult();</span>
 
-<span class="nc" id="L255">            Long errorCount = em.createQuery(</span>
+<span class="fc" id="L255">            Long errorCount = em.createQuery(</span>
                     &quot;SELECT COUNT(p) FROM Patient p WHERE p.epaSyncStatus = 'error'&quot;, Long.class)
-<span class="nc" id="L257">                    .getSingleResult();</span>
+<span class="fc" id="L257">                    .getSingleResult();</span>
 
-<span class="nc" id="L259">            String response = String.format(</span>
+<span class="fc" id="L259">            String response = String.format(</span>
                     &quot;{\&quot;total\&quot;: %d, \&quot;epaEnabled\&quot;: %d, \&quot;synced\&quot;: %d, \&quot;errors\&quot;: %d}&quot;,
                     totalPatients, epaEnabledCount, syncedCount, errorCount);
 
-<span class="nc" id="L263">            return Response.ok(response).build();</span>
+<span class="fc" id="L263">            return Response.ok(response).build();</span>
 
 <span class="nc" id="L265">        } catch (Exception e) {</span>
 <span class="nc" id="L266">            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)</span>
