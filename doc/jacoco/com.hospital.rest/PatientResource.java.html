@@ -16,6 +16,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.GenericEntity;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
@@ -23,7 +24,7 @@ import jakarta.ws.rs.core.Response;
 @Path(&quot;/patients&quot;)
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-<span class="fc" id="L26">public class PatientResource {</span>
+<span class="fc" id="L27">public class PatientResource {</span>
 
     @PersistenceContext(unitName = &quot;hospitalPU&quot;)
     private EntityManager em;
@@ -32,17 +33,19 @@ import jakarta.ws.rs.core.Response;
     public Response getAllPatients(@QueryParam(&quot;status&quot;) String status) {
         try {
             List&lt;Patient&gt; patients;
-<span class="fc bfc" id="L35" title="All 2 branches covered.">            if (&quot;active&quot;.equals(status)) {</span>
-<span class="fc" id="L36">                patients = em.createNamedQuery(&quot;Patient.findActive&quot;, Patient.class)</span>
-<span class="fc" id="L37">                        .getResultList();</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">            if (&quot;active&quot;.equals(status)) {</span>
+<span class="fc" id="L37">                patients = em.createNamedQuery(&quot;Patient.findActive&quot;, Patient.class)</span>
+<span class="fc" id="L38">                        .getResultList();</span>
             } else {
-<span class="fc" id="L39">                patients = em.createNamedQuery(&quot;Patient.findAll&quot;, Patient.class)</span>
-<span class="fc" id="L40">                        .getResultList();</span>
+<span class="fc" id="L40">                patients = em.createNamedQuery(&quot;Patient.findAll&quot;, Patient.class)</span>
+<span class="fc" id="L41">                        .getResultList();</span>
             }
-<span class="fc" id="L42">            return Response.ok(patients).build();</span>
-<span class="fc" id="L43">        } catch (Exception e) {</span>
-<span class="fc" id="L44">            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)</span>
-<span class="fc" id="L45">                    .entity(&quot;{\&quot;error\&quot;: \&quot;&quot; + e.getMessage() + &quot;\&quot;}&quot;).build();</span>
+<span class="fc" id="L43">            GenericEntity&lt;List&lt;Patient&gt;&gt; entity = new GenericEntity&lt;List&lt;Patient&gt;&gt;(patients) {</span>
+            };
+<span class="fc" id="L45">            return Response.ok(entity).build();</span>
+<span class="fc" id="L46">        } catch (Exception e) {</span>
+<span class="fc" id="L47">            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)</span>
+<span class="fc" id="L48">                    .entity(&quot;{\&quot;error\&quot;: \&quot;&quot; + e.getMessage() + &quot;\&quot;}&quot;).build();</span>
         }
     }
 
@@ -50,15 +53,15 @@ import jakarta.ws.rs.core.Response;
     @Path(&quot;/{id}&quot;)
     public Response getPatient(@PathParam(&quot;id&quot;) Long id) {
         try {
-<span class="fc" id="L53">            Patient patient = em.find(Patient.class, id);</span>
-<span class="fc bfc" id="L54" title="All 2 branches covered.">            if (patient == null) {</span>
-<span class="fc" id="L55">                return Response.status(Response.Status.NOT_FOUND)</span>
-<span class="fc" id="L56">                        .entity(&quot;{\&quot;error\&quot;: \&quot;Patient nicht gefunden\&quot;}&quot;).build();</span>
+<span class="fc" id="L56">            Patient patient = em.find(Patient.class, id);</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">            if (patient == null) {</span>
+<span class="fc" id="L58">                return Response.status(Response.Status.NOT_FOUND)</span>
+<span class="fc" id="L59">                        .entity(&quot;{\&quot;error\&quot;: \&quot;Patient nicht gefunden\&quot;}&quot;).build();</span>
             }
-<span class="fc" id="L58">            return Response.ok(patient).build();</span>
-<span class="nc" id="L59">        } catch (Exception e) {</span>
-<span class="nc" id="L60">            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)</span>
-<span class="nc" id="L61">                    .entity(&quot;{\&quot;error\&quot;: \&quot;&quot; + e.getMessage() + &quot;\&quot;}&quot;).build();</span>
+<span class="fc" id="L61">            return Response.ok(patient).build();</span>
+<span class="nc" id="L62">        } catch (Exception e) {</span>
+<span class="nc" id="L63">            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L64">                    .entity(&quot;{\&quot;error\&quot;: \&quot;&quot; + e.getMessage() + &quot;\&quot;}&quot;).build();</span>
         }
     }
 
@@ -66,25 +69,27 @@ import jakarta.ws.rs.core.Response;
     @Path(&quot;/search&quot;)
     public Response searchPatients(@QueryParam(&quot;q&quot;) String query) {
         try {
-<span class="fc" id="L69">            List&lt;Patient&gt; patients = em.createNamedQuery(&quot;Patient.searchByName&quot;, Patient.class)</span>
-<span class="fc" id="L70">                    .setParameter(&quot;search&quot;, &quot;%&quot; + query + &quot;%&quot;)</span>
-<span class="fc" id="L71">                    .getResultList();</span>
-<span class="fc" id="L72">            return Response.ok(patients).build();</span>
-<span class="nc" id="L73">        } catch (Exception e) {</span>
-<span class="nc" id="L74">            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)</span>
-<span class="nc" id="L75">                    .entity(&quot;{\&quot;error\&quot;: \&quot;&quot; + e.getMessage() + &quot;\&quot;}&quot;).build();</span>
+<span class="fc" id="L72">            List&lt;Patient&gt; patients = em.createNamedQuery(&quot;Patient.searchByName&quot;, Patient.class)</span>
+<span class="fc" id="L73">                    .setParameter(&quot;search&quot;, &quot;%&quot; + query + &quot;%&quot;)</span>
+<span class="fc" id="L74">                    .getResultList();</span>
+<span class="fc" id="L75">            GenericEntity&lt;List&lt;Patient&gt;&gt; entity = new GenericEntity&lt;List&lt;Patient&gt;&gt;(patients) {</span>
+            };
+<span class="fc" id="L77">            return Response.ok(entity).build();</span>
+<span class="nc" id="L78">        } catch (Exception e) {</span>
+<span class="nc" id="L79">            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L80">                    .entity(&quot;{\&quot;error\&quot;: \&quot;&quot; + e.getMessage() + &quot;\&quot;}&quot;).build();</span>
         }
     }
 
     @POST
     public Response createPatient(Patient patient) {
         try {
-<span class="fc" id="L82">            em.persist(patient);</span>
-<span class="fc" id="L83">            em.flush();</span>
-<span class="fc" id="L84">            return Response.status(Response.Status.CREATED).entity(patient).build();</span>
-<span class="nc" id="L85">        } catch (Exception e) {</span>
-<span class="nc" id="L86">            return Response.status(Response.Status.BAD_REQUEST)</span>
-<span class="nc" id="L87">                    .entity(&quot;{\&quot;error\&quot;: \&quot;&quot; + e.getMessage() + &quot;\&quot;}&quot;).build();</span>
+<span class="fc" id="L87">            em.persist(patient);</span>
+<span class="fc" id="L88">            em.flush();</span>
+<span class="fc" id="L89">            return Response.status(Response.Status.CREATED).entity(patient).build();</span>
+<span class="nc" id="L90">        } catch (Exception e) {</span>
+<span class="nc" id="L91">            return Response.status(Response.Status.BAD_REQUEST)</span>
+<span class="nc" id="L92">                    .entity(&quot;{\&quot;error\&quot;: \&quot;&quot; + e.getMessage() + &quot;\&quot;}&quot;).build();</span>
         }
     }
 
@@ -92,33 +97,33 @@ import jakarta.ws.rs.core.Response;
     @Path(&quot;/{id}&quot;)
     public Response updatePatient(@PathParam(&quot;id&quot;) Long id, Patient updatedPatient) {
         try {
-<span class="fc" id="L95">            Patient patient = em.find(Patient.class, id);</span>
-<span class="fc bfc" id="L96" title="All 2 branches covered.">            if (patient == null) {</span>
-<span class="fc" id="L97">                return Response.status(Response.Status.NOT_FOUND)</span>
-<span class="fc" id="L98">                        .entity(&quot;{\&quot;error\&quot;: \&quot;Patient nicht gefunden\&quot;}&quot;).build();</span>
+<span class="fc" id="L100">            Patient patient = em.find(Patient.class, id);</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">            if (patient == null) {</span>
+<span class="fc" id="L102">                return Response.status(Response.Status.NOT_FOUND)</span>
+<span class="fc" id="L103">                        .entity(&quot;{\&quot;error\&quot;: \&quot;Patient nicht gefunden\&quot;}&quot;).build();</span>
             }
 
-<span class="fc" id="L101">            patient.setFirstName(updatedPatient.getFirstName());</span>
-<span class="fc" id="L102">            patient.setLastName(updatedPatient.getLastName());</span>
-<span class="fc" id="L103">            patient.setDateOfBirth(updatedPatient.getDateOfBirth());</span>
-<span class="fc" id="L104">            patient.setGender(updatedPatient.getGender());</span>
-<span class="fc" id="L105">            patient.setPhone(updatedPatient.getPhone());</span>
-<span class="fc" id="L106">            patient.setEmail(updatedPatient.getEmail());</span>
-<span class="fc" id="L107">            patient.setAddress(updatedPatient.getAddress());</span>
-<span class="fc" id="L108">            patient.setInsuranceNumber(updatedPatient.getInsuranceNumber());</span>
-<span class="fc" id="L109">            patient.setBloodType(updatedPatient.getBloodType());</span>
-<span class="fc" id="L110">            patient.setAllergies(updatedPatient.getAllergies());</span>
-<span class="fc" id="L111">            patient.setEmergencyContactName(updatedPatient.getEmergencyContactName());</span>
-<span class="fc" id="L112">            patient.setEmergencyContactPhone(updatedPatient.getEmergencyContactPhone());</span>
-<span class="fc" id="L113">            patient.setStatus(updatedPatient.getStatus());</span>
-<span class="fc" id="L114">            patient.setDischargeDate(updatedPatient.getDischargeDate());</span>
+<span class="fc" id="L106">            patient.setFirstName(updatedPatient.getFirstName());</span>
+<span class="fc" id="L107">            patient.setLastName(updatedPatient.getLastName());</span>
+<span class="fc" id="L108">            patient.setDateOfBirth(updatedPatient.getDateOfBirth());</span>
+<span class="fc" id="L109">            patient.setGender(updatedPatient.getGender());</span>
+<span class="fc" id="L110">            patient.setPhone(updatedPatient.getPhone());</span>
+<span class="fc" id="L111">            patient.setEmail(updatedPatient.getEmail());</span>
+<span class="fc" id="L112">            patient.setAddress(updatedPatient.getAddress());</span>
+<span class="fc" id="L113">            patient.setInsuranceNumber(updatedPatient.getInsuranceNumber());</span>
+<span class="fc" id="L114">            patient.setBloodType(updatedPatient.getBloodType());</span>
+<span class="fc" id="L115">            patient.setAllergies(updatedPatient.getAllergies());</span>
+<span class="fc" id="L116">            patient.setEmergencyContactName(updatedPatient.getEmergencyContactName());</span>
+<span class="fc" id="L117">            patient.setEmergencyContactPhone(updatedPatient.getEmergencyContactPhone());</span>
+<span class="fc" id="L118">            patient.setStatus(updatedPatient.getStatus());</span>
+<span class="fc" id="L119">            patient.setDischargeDate(updatedPatient.getDischargeDate());</span>
 
-<span class="fc" id="L116">            em.merge(patient);</span>
-<span class="fc" id="L117">            em.flush();</span>
-<span class="fc" id="L118">            return Response.ok(patient).build();</span>
-<span class="nc" id="L119">        } catch (Exception e) {</span>
-<span class="nc" id="L120">            return Response.status(Response.Status.BAD_REQUEST)</span>
-<span class="nc" id="L121">                    .entity(&quot;{\&quot;error\&quot;: \&quot;&quot; + e.getMessage() + &quot;\&quot;}&quot;).build();</span>
+<span class="fc" id="L121">            em.merge(patient);</span>
+<span class="fc" id="L122">            em.flush();</span>
+<span class="fc" id="L123">            return Response.ok(patient).build();</span>
+<span class="nc" id="L124">        } catch (Exception e) {</span>
+<span class="nc" id="L125">            return Response.status(Response.Status.BAD_REQUEST)</span>
+<span class="nc" id="L126">                    .entity(&quot;{\&quot;error\&quot;: \&quot;&quot; + e.getMessage() + &quot;\&quot;}&quot;).build();</span>
         }
     }
 
@@ -126,16 +131,16 @@ import jakarta.ws.rs.core.Response;
     @Path(&quot;/{id}&quot;)
     public Response deletePatient(@PathParam(&quot;id&quot;) Long id) {
         try {
-<span class="fc" id="L129">            Patient patient = em.find(Patient.class, id);</span>
-<span class="fc bfc" id="L130" title="All 2 branches covered.">            if (patient == null) {</span>
-<span class="fc" id="L131">                return Response.status(Response.Status.NOT_FOUND)</span>
-<span class="fc" id="L132">                        .entity(&quot;{\&quot;error\&quot;: \&quot;Patient nicht gefunden\&quot;}&quot;).build();</span>
+<span class="fc" id="L134">            Patient patient = em.find(Patient.class, id);</span>
+<span class="fc bfc" id="L135" title="All 2 branches covered.">            if (patient == null) {</span>
+<span class="fc" id="L136">                return Response.status(Response.Status.NOT_FOUND)</span>
+<span class="fc" id="L137">                        .entity(&quot;{\&quot;error\&quot;: \&quot;Patient nicht gefunden\&quot;}&quot;).build();</span>
             }
-<span class="fc" id="L134">            em.remove(patient);</span>
-<span class="fc" id="L135">            return Response.noContent().build();</span>
-<span class="nc" id="L136">        } catch (Exception e) {</span>
-<span class="nc" id="L137">            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)</span>
-<span class="nc" id="L138">                    .entity(&quot;{\&quot;error\&quot;: \&quot;&quot; + e.getMessage() + &quot;\&quot;}&quot;).build();</span>
+<span class="fc" id="L139">            em.remove(patient);</span>
+<span class="fc" id="L140">            return Response.noContent().build();</span>
+<span class="nc" id="L141">        } catch (Exception e) {</span>
+<span class="nc" id="L142">            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L143">                    .entity(&quot;{\&quot;error\&quot;: \&quot;&quot; + e.getMessage() + &quot;\&quot;}&quot;).build();</span>
         }
     }
 }

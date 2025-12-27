@@ -16,6 +16,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.GenericEntity;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
@@ -39,7 +40,9 @@ public class PatientResource {
                 patients = em.createNamedQuery("Patient.findAll", Patient.class)
                         .getResultList();
             }
-            return Response.ok(patients).build();
+            GenericEntity<List<Patient>> entity = new GenericEntity<List<Patient>>(patients) {
+            };
+            return Response.ok(entity).build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity("{\"error\": \"" + e.getMessage() + "\"}").build();
@@ -69,7 +72,9 @@ public class PatientResource {
             List<Patient> patients = em.createNamedQuery("Patient.searchByName", Patient.class)
                     .setParameter("search", "%" + query + "%")
                     .getResultList();
-            return Response.ok(patients).build();
+            GenericEntity<List<Patient>> entity = new GenericEntity<List<Patient>>(patients) {
+            };
+            return Response.ok(entity).build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity("{\"error\": \"" + e.getMessage() + "\"}").build();

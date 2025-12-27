@@ -1,24 +1,27 @@
 package com.hospital.epa;
 
-import com.hospital.entity.Patient;
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.Invocation;
-import jakarta.ws.rs.client.WebTarget;
-import jakarta.ws.rs.core.Response;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.DisplayName;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import com.hospital.entity.Patient;
 
 /**
  * Unit tests for EPA Integration Service
@@ -36,7 +39,7 @@ class EPAIntegrationServiceTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        
+
         testPatient = new Patient();
         testPatient.setId(1L);
         testPatient.setFirstName("Max");
@@ -52,7 +55,7 @@ class EPAIntegrationServiceTest {
     void testEPAConnectionSuccess() {
         // This is a simplified test since we can't easily mock static ClientBuilder
         // In a real scenario, you'd use dependency injection for the HTTP client
-        
+
         // Act & Assert
         assertDoesNotThrow(() -> epaService.testEPAConnection());
     }
@@ -74,11 +77,11 @@ class EPAIntegrationServiceTest {
         // Arrange
         Patient patient1 = createTestPatient(1L, "Max", "Mustermann");
         Patient patient2 = createTestPatient(2L, "Anna", "Schmidt");
-        
+
         List<Patient> patients = Arrays.asList(patient1, patient2);
-        
+
         when(fhirConverter.patientToFHIR(any(Patient.class)))
-            .thenReturn("{\"resourceType\":\"Patient\"}");
+                .thenReturn("{\"resourceType\":\"Patient\"}");
 
         // Act
         var result = epaService.syncAllPatientsToEPA(patients);
@@ -131,7 +134,7 @@ class EPAIntegrationServiceTest {
     void testEPAResponseStructure() {
         // Arrange
         when(fhirConverter.patientToFHIR(testPatient))
-            .thenReturn("{\"resourceType\":\"Patient\"}");
+                .thenReturn("{\"resourceType\":\"Patient\"}");
 
         // Act
         var result = epaService.sendPatientToEPA(testPatient);
@@ -146,7 +149,7 @@ class EPAIntegrationServiceTest {
     void testEPATimeout() {
         // This test verifies timeout handling
         // In production, you'd configure appropriate timeouts
-        
+
         // Act
         var result = epaService.sendPatientToEPA(testPatient);
 
@@ -160,10 +163,9 @@ class EPAIntegrationServiceTest {
     void testSyncStatistics() {
         // Arrange
         List<Patient> patients = Arrays.asList(
-            createTestPatient(1L, "Patient", "One"),
-            createTestPatient(2L, "Patient", "Two"),
-            createTestPatient(3L, "Patient", "Three")
-        );
+                createTestPatient(1L, "Patient", "One"),
+                createTestPatient(2L, "Patient", "Two"),
+                createTestPatient(3L, "Patient", "Three"));
 
         // Act
         var result = epaService.syncAllPatientsToEPA(patients);
