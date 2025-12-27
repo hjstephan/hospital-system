@@ -110,17 +110,17 @@ import jakarta.persistence.Table;
 
     @PrePersist
     protected void onCreate() {
-<span class="nc" id="L113">        createdAt = LocalDateTime.now();</span>
-<span class="nc" id="L114">        updatedAt = LocalDateTime.now();</span>
-<span class="nc bnc" id="L115" title="All 2 branches missed.">        if (admissionDate == null) {</span>
-<span class="nc" id="L116">            admissionDate = LocalDateTime.now();</span>
+<span class="fc" id="L113">        createdAt = LocalDateTime.now();</span>
+<span class="fc" id="L114">        updatedAt = LocalDateTime.now();</span>
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">        if (admissionDate == null) {</span>
+<span class="fc" id="L116">            admissionDate = LocalDateTime.now();</span>
         }
-<span class="nc" id="L118">    }</span>
+<span class="fc" id="L118">    }</span>
 
     @PreUpdate
     protected void onUpdate() {
-<span class="nc" id="L122">        updatedAt = LocalDateTime.now();</span>
-<span class="nc" id="L123">    }</span>
+<span class="fc" id="L122">        updatedAt = LocalDateTime.now();</span>
+<span class="fc" id="L123">    }</span>
 
     // Bestehende Getters und Setters...
     public Long getId() {
@@ -252,30 +252,30 @@ import jakarta.persistence.Table;
 <span class="fc" id="L252">    }</span>
 
     public LocalDateTime getCreatedAt() {
-<span class="nc" id="L255">        return createdAt;</span>
+<span class="fc" id="L255">        return createdAt;</span>
     }
 
     public LocalDateTime getUpdatedAt() {
-<span class="nc" id="L259">        return updatedAt;</span>
+<span class="fc" id="L259">        return updatedAt;</span>
     }
 
     @JsonbTransient
     public List&lt;Diagnosis&gt; getDiagnoses() {
-<span class="nc" id="L264">        return diagnoses;</span>
+<span class="fc" id="L264">        return diagnoses;</span>
     }
 
     public void setDiagnoses(List&lt;Diagnosis&gt; diagnoses) {
-<span class="nc" id="L268">        this.diagnoses = diagnoses;</span>
-<span class="nc" id="L269">    }</span>
+<span class="fc" id="L268">        this.diagnoses = diagnoses;</span>
+<span class="fc" id="L269">    }</span>
 
     @JsonbTransient
     public List&lt;Medication&gt; getMedications() {
-<span class="nc" id="L273">        return medications;</span>
+<span class="fc" id="L273">        return medications;</span>
     }
 
     public void setMedications(List&lt;Medication&gt; medications) {
-<span class="nc" id="L277">        this.medications = medications;</span>
-<span class="nc" id="L278">    }</span>
+<span class="fc" id="L277">        this.medications = medications;</span>
+<span class="fc" id="L278">    }</span>
 
     // EPA-spezifische Getters und Setters
     public String getEpaId() {

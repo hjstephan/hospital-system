@@ -143,25 +143,25 @@ cp target/hospital-management.war $JBOSS_HOME/standalone/deployments/
 ```
 hospital-system/
 ├── src/
-│   └── main/
-│       ├── java/com/hospital/
-│       │   ├── entity/          # JPA entities
-│       │   │   ├── Patient.java
-│       │   │   ├── Diagnosis.java
-│       │   │   └── Medication.java
-│       │   ├── rest/            # REST endpoints
-│       │   │   ├── PatientResource.java
-│       │   │   └── EPAResource.java
-│       │   └── epa/             # EPA integration
-│       │       ├── EPAIntegrationService.java
-│       │       └── FHIRConverter.java
-│       ├── resources/
-│       │   └── META-INF/
-│       │       └── persistence.xml
-│       └── webapp/
-│           └── index.html       # Frontend application
-├── hospital_db.sql              # Database schema
-├── hospital_db_ema_migration.sql # EPA extensions
+│   ├── main/
+│   │   ├── java/com/hospital/
+│   │   │   ├── entity/          # JPA entities
+│   │   │   │   ├── Patient.java
+│   │   │   │   ├── Diagnosis.java
+│   │   │   │   └── Medication.java
+│   │   │   ├── rest/            # REST endpoints
+│   │   │   │   ├── PatientResource.java
+│   │   │   │   └── EPAResource.java
+│   │   │   │   └── RestConfig.java
+│   │   │   └── epa/             # EPA integration
+│   │   │       ├── EPAIntegrationService.java
+│   │   │       └── FHIRConverter.java
+│   │   ├── resources/
+│   │   │   └── META-INF/
+│   │   │       └── persistence.xml
+│   │   └── webapp/
+│   │       └── index.html       # Frontend application
+|   └── test/                    # test folder with tests
 └── pom.xml                      # Maven configuration
 ```
 

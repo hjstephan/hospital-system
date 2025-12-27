@@ -6,21 +6,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Krankenhaus Patientenverwaltung mit EPA</title>
     <style>
+        @import url('fonts.googleapis.com');
+
         :root {
-            --bg-start: #f5f7fa;
-            --bg-end: #eef3f7;
-            --primary: #1f4e79;
-            /* deep blue */
-            --primary-2: #2d6ca3;
-            /* lighter blue */
-            --muted: #6c757d;
-            --success: #2f7a3e;
-            --danger: #a12b2b;
-            --warning: #b08b00;
-            --info: #0b7285;
+            /* More serious business color palette (navy / dark slate) */
+            --bg-page: #f4f6f8;
+            /* light cool background */
+            --primary: #0b2540;
+            /* corporate navy */
+            --primary-light: #efefef;
+            /* lighter navy for hover */
+            --primary-dark: #062a5c;
+            /* darker navy for borders */
+            --success: #2d6a4f;
+            /* muted dark green */
+            --danger: #8b2328;
+            /* dark red */
+            --warning: #b47d09;
+            /* muted amber */
+            --info: #0a58ca;
+            /* information blue */
             --card-bg: #ffffff;
-            --surface: #f8f9fa;
-            --border: #e9ecef;
+            --surface: #f8fafc;
+            /* slightly bluish surface */
+            --border: #dfe7ef;
+            /* cool light border */
+            --text-primary: #0b2540;
+            /* dark slate for text */
+            --text-secondary: #5a6b7a;
+            /* muted slate */
         }
 
         * {
@@ -30,53 +44,93 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, var(--bg-start) 0%, var(--bg-end) 100%);
+            /* Prefer a modern, readable UI font when available, fall back to system fonts */
+            font-family: 'Ubuntu', sans-serif;
+            /* slightly larger base size for readability */
+            font-size: 16px;
+            /* more comfortable line height and small letter spacing to avoid cramped text */
+            line-height: 1.6;
+            letter-spacing: 0.2px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background: var(--bg-page);
             min-height: 100vh;
-            padding: 20px;
-            color: #222;
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
         }
 
-        .container {
-            --radius: 6px;
-            /* smaller, more professional corners */
-            margin: 0 auto;
-            background: var(--card-bg);
-            border-radius: var(--radius);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            overflow: hidden;
-        }
-
+        /* Header - Full Width */
         header {
-            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-2) 100%);
+            background: var(--primary);
             color: white;
-            padding: 24px;
-            text-align: center;
+            padding: 24px 0;
+            border-bottom: 3px solid var(--primary-dark);
+            width: 100%;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 30px;
         }
 
         h1 {
-            font-size: 2rem;
+            font-size: 1.75rem;
             margin-bottom: 6px;
-            font-weight: 700;
+            font-weight: 600;
+            /* avoid too-tight negative spacing on headings */
+            letter-spacing: 0px;
         }
 
+        header p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+
+        /* EPA Status Banner - Full Width */
         .epa-status-banner {
             background: var(--success);
             color: white;
-            padding: 10px 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            width: 100%;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
         }
 
         .epa-status-banner.disconnected {
-            background: var(--danger);
+            background: var(--text-secondary);
+        }
+
+        .banner-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        /* Main Content - Centered */
+        main {
+            flex: 1;
+            width: 100%;
+            padding: 30px 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 30px;
         }
 
         .controls {
             padding: 20px;
-            background: var(--surface);
-            border-bottom: 1px solid var(--border);
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            margin-bottom: 20px;
             display: flex;
             gap: 12px;
             flex-wrap: wrap;
@@ -84,7 +138,7 @@
 
         .search-box {
             flex: 1;
-            min-width: 200px;
+            min-width: 250px;
         }
 
         input[type="text"],
@@ -94,140 +148,136 @@
         select,
         textarea {
             width: 100%;
-            padding: 10px;
+            padding: 10px 12px;
             border: 1px solid var(--border);
-            border-radius: 8px;
+            border-radius: 4px;
             font-size: 14px;
-            transition: border-color 0.2s;
+            transition: border-color 0.2s, box-shadow 0.2s;
             background: #fff;
+            color: var(--text-primary);
         }
 
         input:focus,
         select:focus,
         textarea:focus {
             outline: none;
-            border-color: var(--primary-2);
-            box-shadow: 0 0 0 3px rgba(45, 108, 163, 0.08);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(73, 80, 87, 0.1);
         }
 
         button {
-            padding: 10px 18px;
+            padding: 10px 16px;
             border: none;
-            border-radius: 8px;
+            border-radius: 4px;
             font-size: 13px;
-            font-weight: 600;
+            font-weight: 500;
             cursor: pointer;
-            transition: all 0.15s ease-in-out;
-            text-transform: none;
-            /* changed to non-uppercase */
-            letter-spacing: 0.4px;
+            transition: all 0.15s ease;
+            letter-spacing: 0.3px;
+            background: var(--primary);
+            color: white;
+            border: 1px solid var(--primary-dark);
+        }
+
+        button:hover {
+            background: var(--primary-light);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
         }
 
         .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(31, 78, 121, 0.12);
+            background: #a8c5e0;
+            color: #0b2540;
+            border: 1px solid #8fb3d4;
         }
 
         .btn-success {
-            background: var(--success);
-            color: white;
+            background: #b8d4c8;
+            color: #0b2540;
+            border: 1px solid #9fc4b3;
         }
 
         .btn-danger {
-            background: var(--danger);
-            color: white;
+            background: #d99ca0;
+            color: #0b2540;
+            border: 1px solid #d99ca0;
         }
 
         .btn-warning {
-            background: var(--warning);
-            color: #fff;
+            background: #e8c274;
+            color: #0b2540;
+            border: 1px solid #ecc885;
         }
 
         .btn-info {
-            background: var(--info);
-            color: white;
+            background: #8fbdd9;
+            color: #0b2540;
+            border: 1px solid #9ac4d9;
+        }
+
+        .btn-edit {
+            background: #e2e6ea;
+            color: #0b2540;
+            border: 1px solid #cfd6db;
         }
 
         .content {
-            padding: 24px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 30px;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 16px;
+            margin-top: 20px;
+            font-size: 14px;
         }
 
         th {
-            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-2) 100%);
-            color: white;
-            padding: 12px;
+            background: var(--surface);
+            color: var(--text-primary);
+            padding: 12px 16px;
             text-align: left;
-            font-weight: 700;
+            font-weight: 600;
             text-transform: uppercase;
-            font-size: 12px;
+            font-size: 11px;
             letter-spacing: 0.8px;
+            border-bottom: 2px solid var(--border);
         }
 
         td {
-            padding: 12px;
+            padding: 12px 16px;
             border-bottom: 1px solid var(--border);
         }
 
         tr:hover {
-            background: #fafbfd;
+            background: #f8f9fa;
         }
 
         .status-badge {
             display: inline-block;
-            padding: 6px 12px;
-            border-radius: 18px;
-            font-size: 12px;
-            font-weight: 700;
-        }
-
-        .status-active {
-            background: rgba(47, 122, 62, 0.12);
-            color: var(--success);
-        }
-
-        .status-discharged {
-            background: rgba(176, 139, 0, 0.12);
-            color: var(--warning);
+            padding: 4px 10px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: var(--surface);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
         }
 
         .epa-badge {
             display: inline-block;
-            padding: 5px 12px;
-            border-radius: 16px;
+            padding: 4px 10px;
+            border-radius: 3px;
             font-size: 11px;
-            font-weight: 700;
+            font-weight: 600;
             margin-left: 5px;
-        }
-
-        .epa-synced {
-            background: rgba(47, 122, 62, 0.12);
-            color: var(--success);
-        }
-
-        .epa-pending {
-            background: rgba(176, 139, 0, 0.12);
-            color: var(--warning);
-        }
-
-        .epa-error {
-            background: rgba(161, 43, 43, 0.08);
-            color: var(--danger);
-        }
-
-        .epa-disabled {
-            background: #ececec;
-            color: #4b5156;
+            background: var(--surface);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
         }
 
         .modal {
@@ -237,7 +287,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.45);
+            background: rgba(0, 0, 0, 0.5);
             z-index: 1000;
             align-items: center;
             justify-content: center;
@@ -249,43 +299,44 @@
 
         .modal-content {
             background: var(--card-bg);
-            border-radius: 12px;
+            border-radius: 6px;
             width: 92%;
             max-width: 720px;
             max-height: 90vh;
             overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
-        }
-
-        .modal-content {
-            border-radius: var(--radius);
-            /* updated to use new radius */
-            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.10);
-            /* adjusted shadow */
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border);
         }
 
         .modal-header {
-            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-2) 100%);
+            background: var(--primary);
             color: white;
             padding: 18px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-bottom: 1px solid var(--primary-dark);
+        }
+
+        .modal-header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
         }
 
         .modal-body {
-            padding: 20px;
+            padding: 24px;
         }
 
         .form-group {
-            margin-bottom: 14px;
+            margin-bottom: 16px;
         }
 
         label {
             display: block;
             margin-bottom: 6px;
-            font-weight: 700;
-            color: #343a40;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 13px;
         }
 
         .form-row {
@@ -298,40 +349,50 @@
             background: none;
             border: none;
             color: white;
-            font-size: 26px;
+            font-size: 24px;
             cursor: pointer;
             padding: 0;
             width: 30px;
             height: 30px;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .close-btn:hover {
+            opacity: 1;
         }
 
         .loading {
             text-align: center;
-            padding: 36px;
+            padding: 40px;
             color: var(--muted);
+            font-size: 14px;
         }
 
         .action-buttons {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
         }
 
         .action-buttons button {
-            padding: 8px 14px;
+            padding: 6px 12px;
             font-size: 12px;
         }
 
         .epa-section {
             background: var(--surface);
             padding: 16px;
-            border-radius: 8px;
-            margin-top: 16px;
+            border-radius: 4px;
+            margin-top: 20px;
+            border: 1px solid var(--border);
         }
 
         .epa-section h3 {
-            color: var(--primary-2);
+            color: var(--primary);
             margin-bottom: 12px;
+            font-size: 1rem;
+            font-weight: 600;
         }
 
         .checkbox-group {
@@ -348,26 +409,75 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 16px;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
         }
 
         .stat-card {
             background: var(--card-bg);
-            padding: 16px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            padding: 20px;
+            border-radius: 4px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
             text-align: center;
+            border: 1px solid var(--border);
         }
 
         .stat-card h3 {
-            font-size: 1.6rem;
-            color: var(--primary-2);
+            font-size: 2rem;
+            color: var(--primary);
             margin-bottom: 8px;
+            font-weight: 600;
         }
 
         .stat-card p {
-            color: var(--muted);
+            color: var(--text-secondary);
             font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        small {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* Footer - Full Width */
+        footer {
+            background: var(--primary);
+            color: white;
+            width: 100%;
+            padding: 24px 0;
+            margin-top: auto;
+            border-top: 3px solid var(--primary-dark);
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            opacity: 0.9;
+            transition: opacity 0.2s;
+        }
+
+        .footer-links a:hover {
+            opacity: 1;
+            text-decoration: underline;
         }
 
         @media (max-width: 768px) {
@@ -381,40 +491,82 @@
 
             th,
             td {
-                padding: 10px;
+                padding: 10px 12px;
+            }
+
+            .header-content,
+            .banner-content,
+            .container,
+            .footer-content {
+                padding: 0 20px;
+            }
+
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .footer-links {
+                justify-content: center;
             }
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <header>
-            <h1>🏥 Krankenhaus Patientenverwaltung</h1>
+    <!-- Header - Full Width -->
+    <header>
+        <div class="header-content">
+            <h1>Krankenhaus Patientenverwaltung</h1>
             <p>Zentrale Verwaltung für Patientendaten mit EPA-Integration</p>
-        </header>
+        </div>
+    </header>
 
-        <div id="epaStatusBanner" class="epa-status-banner">
+    <!-- EPA Status Banner - Full Width -->
+    <div id="epaStatusBanner" class="epa-status-banner">
+        <div class="banner-content">
             <span>📡 EPA-Status: <strong id="epaStatusText">Prüfe Verbindung...</strong></span>
-            <button class="btn-primary" onclick="checkEPAConnection()" style="padding: 5px 15px; font-size: 12px;">🔄
+            <button class="btn-primary" onclick="checkEPAConnection()" style="padding: 6px 14px; font-size: 12px;">🔄
                 Verbindung testen</button>
         </div>
-
-        <div class="controls">
-            <div class="search-box">
-                <input type="text" id="searchInput" placeholder="Patient suchen (Name)...">
-            </div>
-            <button class="btn-primary" onclick="openModal()">➕ Neuer Patient</button>
-            <button class="btn-primary" onclick="loadPatients()">🔄 Aktualisieren</button>
-            <button class="btn-info" onclick="showEPAStats()">📊 EPA-Statistiken</button>
-            <button class="btn-success" onclick="syncAllToEPA()">📤 Alle zu EPA synchronisieren</button>
-        </div>
-
-        <div class="content">
-            <div id="statsContainer"></div>
-            <div id="patientsTable"></div>
-        </div>
     </div>
+
+    <!-- Main Content - Centered -->
+    <main>
+        <div class="container">
+            <!-- Controls -->
+            <div class="controls">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Patient suchen (Name)...">
+                </div>
+                <button class="btn-primary" onclick="openModal()">Neuer Patient</button>
+                <button class="btn-primary" onclick="loadPatients()">Aktualisieren</button>
+                <button class="btn-info" onclick="showEPAStats()">EPA-Statistiken</button>
+                <button class="btn-success" onclick="syncAllToEPA()">Alle zu EPA synchronisieren</button>
+            </div>
+
+            <!-- Content -->
+            <div class="content">
+                <div id="statsContainer"></div>
+                <div id="patientsTable"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer - Full Width -->
+    <footer>
+        <div class="footer-content">
+            <div>
+                <strong>Krankenhaus Patientenverwaltung</strong> © 2025
+            </div>
+            <div class="footer-links">
+                <a href="#">Datenschutz</a>
+                <a href="#">Impressum</a>
+                <a href="#">Kontakt</a>
+                <a href="#">Hilfe</a>
+            </div>
+        </div>
+    </footer>
 
     <!-- Modal für Patient erstellen/bearbeiten -->
     <div id="patientModal" class="modal">
@@ -518,22 +670,22 @@
                     </div>
 
                     <div class="epa-section">
-                        <h3>📋 Elektronische Patientenakte (EPA)</h3>
+                        <h3>Elektronische Patientenakte (EPA)</h3>
                         <div class="form-group">
                             <div class="checkbox-group">
                                 <input type="checkbox" id="epaEnabled" checked>
                                 <label style="margin: 0;">Patient stimmt EPA-Synchronisation zu</label>
                             </div>
-                            <small style="color: #6c757d; display: block; margin-top: 10px;">
+                            <small style="display: block; margin-top: 10px;">
                                 Mit der Einwilligung werden Patientendaten gemäß FHIR-Standard an die elektronische
                                 Patientenakte übertragen.
                             </small>
                         </div>
                     </div>
 
-                    <div style="display: flex; gap: 10px; margin-top: 30px;">
-                        <button type="submit" class="btn-success" style="flex: 1;">💾 Speichern</button>
-                        <button type="button" class="btn-danger" onclick="closeModal()">❌ Abbrechen</button>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 24px;">
+                        <button type="submit" class="btn-success">Speichern</button>
+                        <button type="button" class="btn-danger" onclick="closeModal()">Abbrechen</button>
                     </div>
                 </form>
             </div>
@@ -545,13 +697,11 @@
         const EPA_API_URL = '/hospital-management/api/epa';
         let currentEditId = null;
 
-        // Prüfe EPA-Verbindung beim Laden
         window.addEventListener('load', () => {
             checkEPAConnection();
             loadPatients();
         });
 
-        // EPA-Verbindung testen
         async function checkEPAConnection() {
             const banner = document.getElementById('epaStatusBanner');
             const statusText = document.getElementById('epaStatusText');
@@ -560,7 +710,6 @@
                 const response = await fetch(`${EPA_API_URL}/test-connection`);
 
                 if (!response.ok) {
-                    // Non-2xx status: log server response for debugging and mark disconnected
                     const text = await response.text().catch(() => '');
                     console.error('EPA test-connection responded with', response.status, text);
                     banner.className = 'epa-status-banner disconnected';
@@ -568,7 +717,6 @@
                     return;
                 }
 
-                // Try to parse JSON but be defensive in case server returned non-JSON (e.g. error page)
                 let data;
                 try {
                     data = await response.json();
@@ -594,7 +742,6 @@
             }
         }
 
-        // EPA-Statistiken anzeigen
         async function showEPAStats() {
             try {
                 const response = await fetch(`${EPA_API_URL}/statistics`);
@@ -627,7 +774,6 @@
             }
         }
 
-        // Patienten laden
         async function loadPatients(filter = '') {
             const tableDiv = document.getElementById('patientsTable');
             tableDiv.innerHTML = '<div class="loading">Lade Patienten...</div>';
@@ -643,7 +789,7 @@
                 if (!response.ok) {
                     const text = await response.text().catch(() => '');
                     console.error('Failed to load patients:', response.status, text);
-                    tableDiv.innerHTML = `<p style="text-align: center; padding: 40px; color: #dc3545;">Fehler beim Laden (Status ${response.status})</p>`;
+                    tableDiv.innerHTML = `<p style="text-align: center; padding: 40px; color: #6c757d;">Fehler beim Laden (Status ${response.status})</p>`;
                     return;
                 }
 
@@ -653,7 +799,7 @@
                 } catch (parseErr) {
                     const text = await response.text().catch(() => '');
                     console.error('Invalid JSON from patients endpoint:', parseErr, text);
-                    tableDiv.innerHTML = `<p style="text-align: center; padding: 40px; color: #dc3545;">Ungültige Server-Antwort</p>`;
+                    tableDiv.innerHTML = `<p style="text-align: center; padding: 40px; color: #6c757d;">Ungültige Server-Antwort</p>`;
                     return;
                 }
 
@@ -680,24 +826,6 @@
                 `;
 
                 patients.forEach(p => {
-                    const statusClass = p.status === 'active' ? 'status-active' : 'status-discharged';
-                    const statusText = p.status === 'active' ? 'Aktiv' : 'Entlassen';
-
-                    let epaStatusBadge = '';
-                    if (p.epaEnabled) {
-                        const epaClass = 'epa-' + (p.epaSyncStatus || 'pending');
-                        const epaText = {
-                            'synced': '✓ Sync',
-                            'pending': '⏳ Ausstehend',
-                            'error': '✗ Fehler',
-                            'disabled': '○ Deaktiviert'
-                        }[p.epaSyncStatus] || '○ Unbekannt';
-
-                        epaStatusBadge = `<span class="epa-badge ${epaClass}">${epaText}</span>`;
-                    } else {
-                        epaStatusBadge = '<span class="epa-badge epa-disabled">EPA aus</span>';
-                    }
-
                     html += `
                         <tr>
                             <td>${p.id}</td>
@@ -705,13 +833,13 @@
                             <td>${formatDate(p.dateOfBirth)}</td>
                             <td>${p.insuranceNumber}</td>
                             <td>${p.bloodType || '-'}</td>
-                            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-                            <td>${epaStatusBadge}</td>
+                            <td><span class="status-badge">${p.status === 'active' ? 'Aktiv' : 'Entlassen'}</span></td>
+                            <td><span class="epa-badge">${p.epaEnabled ? (p.epaSyncStatus || 'Pending') : 'Aus'}</span></td>
                             <td>
                                 <div class="action-buttons">
-                                    <button class="btn-warning" onclick="editPatient(${p.id})">✏️</button>
-                                    <button class="btn-info" onclick="syncToEPA(${p.id})">📤 EPA</button>
-                                    <button class="btn-danger" onclick="deletePatient(${p.id})">🗑️</button>
+                                    <button class="btn-edit" title="Patient bearbeiten" onclick="editPatient(${p.id})">✏️</button>
+                                    <button class="btn-edit" title="Zur EPA synchronisieren" onclick="syncToEPA(${p.id})">🔄</button>
+                                    <button class="btn-edit" title="Patient löschen" onclick="deletePatient(${p.id})">❌</button>
                                 </div>
                             </td>
                         </tr>
@@ -722,11 +850,10 @@
                 tableDiv.innerHTML = html;
 
             } catch (error) {
-                tableDiv.innerHTML = `<p style="text-align: center; padding: 40px; color: #dc3545;">Fehler beim Laden: ${error.message}</p>`;
+                tableDiv.innerHTML = `<p style="text-align: center; padding: 40px; color: #6c757d;">Fehler beim Laden: ${error.message}</p>`;
             }
         }
 
-        // Einzelnen Patient zu EPA synchronisieren
         async function syncToEPA(patientId) {
             if (!confirm('Patient jetzt zur EPA synchronisieren?')) return;
 
@@ -748,7 +875,6 @@
             }
         }
 
-        // Alle Patienten zur EPA synchronisieren
         async function syncAllToEPA() {
             if (!confirm('Alle Patienten mit EPA-Einwilligung jetzt synchronisieren?')) return;
 
@@ -765,27 +891,23 @@
             }
         }
 
-        // Datum formatieren
         function formatDate(dateString) {
             if (!dateString) return '-';
             const date = new Date(dateString);
             return date.toLocaleDateString('de-DE');
         }
 
-        // Modal öffnen
         function openModal(editMode = false) {
             document.getElementById('patientModal').classList.add('active');
             document.getElementById('modalTitle').textContent = editMode ? 'Patient bearbeiten' : 'Neuer Patient';
         }
 
-        // Modal schließen
         function closeModal() {
             document.getElementById('patientModal').classList.remove('active');
             document.getElementById('patientForm').reset();
             currentEditId = null;
         }
 
-        // Patient bearbeiten
         async function editPatient(id) {
             try {
                 const response = await fetch(`${API_URL}/${id}`);
@@ -813,7 +935,6 @@
             }
         }
 
-        // Patient löschen
         async function deletePatient(id) {
             if (!confirm('Möchten Sie diesen Patienten wirklich löschen?')) {
                 return;

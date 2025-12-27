@@ -7,7 +7,7 @@
 
     <groupId>com.hospital</groupId>
     <artifactId>patient-management</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <packaging>war</packaging>
     <url>https://github.com/hjstephan/hospital-system</url>
 

@@ -1,23 +1,34 @@
 package com.hospital.rest;
 
-import com.hospital.entity.Patient;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.TypedQuery;
-import jakarta.ws.rs.core.Response;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.DisplayName;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import com.hospital.entity.Patient;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
+import jakarta.ws.rs.core.Response;
 
 /**
  * Unit tests for PatientResource REST API
@@ -38,7 +49,7 @@ class PatientResourceTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        
+
         // Create test patient
         testPatient = new Patient();
         testPatient.setId(1L);
@@ -58,7 +69,7 @@ class PatientResourceTest {
         // Arrange
         List<Patient> patients = Arrays.asList(testPatient);
         when(entityManager.createNamedQuery("Patient.findAll", Patient.class))
-            .thenReturn(typedQuery);
+                .thenReturn(typedQuery);
         when(typedQuery.getResultList()).thenReturn(patients);
 
         // Act
@@ -66,7 +77,10 @@ class PatientResourceTest {
 
         // Assert
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
-        List<Patient> result = (List<Patient>) response.getEntity();
+        Object entity = response.getEntity();
+        assertTrue(entity instanceof List);
+        List<?> raw = (List<?>) entity;
+        List<Patient> result = raw.stream().map(o -> (Patient) o).collect(Collectors.toList());
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals("Max", result.get(0).getFirstName());
@@ -78,7 +92,7 @@ class PatientResourceTest {
         // Arrange
         List<Patient> activePatients = Arrays.asList(testPatient);
         when(entityManager.createNamedQuery("Patient.findActive", Patient.class))
-            .thenReturn(typedQuery);
+                .thenReturn(typedQuery);
         when(typedQuery.getResultList()).thenReturn(activePatients);
 
         // Act
@@ -86,7 +100,10 @@ class PatientResourceTest {
 
         // Assert
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
-        List<Patient> result = (List<Patient>) response.getEntity();
+        Object entity = response.getEntity();
+        assertTrue(entity instanceof List);
+        List<?> raw = (List<?>) entity;
+        List<Patient> result = raw.stream().map(o -> (Patient) o).collect(Collectors.toList());
         assertEquals(1, result.size());
         assertEquals("active", result.get(0).getStatus());
     }
@@ -127,7 +144,7 @@ class PatientResourceTest {
         // Arrange
         List<Patient> searchResults = Arrays.asList(testPatient);
         when(entityManager.createNamedQuery("Patient.searchByName", Patient.class))
-            .thenReturn(typedQuery);
+                .thenReturn(typedQuery);
         when(typedQuery.setParameter(eq("search"), anyString())).thenReturn(typedQuery);
         when(typedQuery.getResultList()).thenReturn(searchResults);
 
@@ -136,8 +153,32 @@ class PatientResourceTest {
 
         // Assert
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
-        List<Patient> result = (List<Patient>) response.getEntity();
+        Object entity = response.getEntity();
+        assertTrue(entity instanceof List);
+        List<?> raw = (List<?>) entity;
+        List<Patient> result = raw.stream().map(o -> (Patient) o).collect(Collectors.toList());
         assertEquals(1, result.size());
+    }
+
+    @Test
+    @DisplayName("Should return empty list when no patients")
+    void testGetAllPatientsEmpty() {
+        // Arrange
+        List<Patient> empty = Arrays.asList();
+        when(entityManager.createNamedQuery("Patient.findAll", Patient.class))
+                .thenReturn(typedQuery);
+        when(typedQuery.getResultList()).thenReturn(empty);
+
+        // Act
+        Response response = patientResource.getAllPatients(null);
+
+        // Assert
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        Object entity = response.getEntity();
+        assertTrue(entity instanceof List);
+        List<?> raw = (List<?>) entity;
+        List<Patient> result = raw.stream().map(o -> (Patient) o).collect(Collectors.toList());
+        assertEquals(0, result.size());
     }
 
     @Test
@@ -238,7 +279,7 @@ class PatientResourceTest {
     void testHandleDatabaseException() {
         // Arrange
         when(entityManager.createNamedQuery("Patient.findAll", Patient.class))
-            .thenThrow(new RuntimeException("Database error"));
+                .thenThrow(new RuntimeException("Database error"));
 
         // Act
         Response response = patientResource.getAllPatients(null);

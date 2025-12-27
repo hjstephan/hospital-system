@@ -1,11 +1,22 @@
 package com.hospital.integration;
 
-import com.hospital.entity.Patient;
-import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+
+import com.hospital.entity.Patient;
 
 /**
  * Integration tests for the complete patient workflow
@@ -15,7 +26,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class PatientIntegrationTest {
 
     private static Patient testPatient;
-    private static final String BASE_URL = "http://localhost:8080/hospital-management/api";
 
     @BeforeAll
     static void setUpClass() {
@@ -38,7 +48,7 @@ class PatientIntegrationTest {
     void testCreatePatientWorkflow() {
         // This test would make actual HTTP requests in a real integration test
         // For unit testing purposes, we validate the patient object
-        
+
         assertNotNull(testPatient);
         assertEquals("Integration", testPatient.getFirstName());
         assertEquals("Test", testPatient.getLastName());
@@ -50,13 +60,12 @@ class PatientIntegrationTest {
     @DisplayName("Integration: Validate patient data completeness")
     void testPatientDataCompleteness() {
         assertAll("Patient data validation",
-            () -> assertNotNull(testPatient.getFirstName(), "First name should not be null"),
-            () -> assertNotNull(testPatient.getLastName(), "Last name should not be null"),
-            () -> assertNotNull(testPatient.getDateOfBirth(), "Date of birth should not be null"),
-            () -> assertNotNull(testPatient.getGender(), "Gender should not be null"),
-            () -> assertNotNull(testPatient.getInsuranceNumber(), "Insurance number should not be null"),
-            () -> assertEquals("active", testPatient.getStatus(), "Status should be active")
-        );
+                () -> assertNotNull(testPatient.getFirstName(), "First name should not be null"),
+                () -> assertNotNull(testPatient.getLastName(), "Last name should not be null"),
+                () -> assertNotNull(testPatient.getDateOfBirth(), "Date of birth should not be null"),
+                () -> assertNotNull(testPatient.getGender(), "Gender should not be null"),
+                () -> assertNotNull(testPatient.getInsuranceNumber(), "Insurance number should not be null"),
+                () -> assertEquals("active", testPatient.getStatus(), "Status should be active"));
     }
 
     @Test
@@ -81,14 +90,14 @@ class PatientIntegrationTest {
         // Enable EPA
         testPatient.setEpaEnabled(true);
         testPatient.setEpaSyncStatus("pending");
-        
+
         assertTrue(testPatient.getEpaEnabled());
         assertEquals("pending", testPatient.getEpaSyncStatus());
 
         // Simulate successful sync
         testPatient.setEpaSyncStatus("synced");
         testPatient.setEpaId("EPA-INT-TEST-001");
-        
+
         assertEquals("synced", testPatient.getEpaSyncStatus());
         assertNotNull(testPatient.getEpaId());
     }
@@ -99,7 +108,7 @@ class PatientIntegrationTest {
     void testPatientDischargeWorkflow() {
         // Discharge patient
         testPatient.setStatus("discharged");
-        
+
         assertEquals("discharged", testPatient.getStatus());
     }
 
@@ -114,29 +123,28 @@ class PatientIntegrationTest {
         lifecyclePatient.setGender("Weiblich");
         lifecyclePatient.setInsuranceNumber("INS-LIFECYCLE-001");
         lifecyclePatient.setStatus("active");
-        
+
         // Admission
         assertNotNull(lifecyclePatient);
         assertEquals("active", lifecyclePatient.getStatus());
-        
+
         // Medical treatment (update)
         lifecyclePatient.setAllergies("None");
         lifecyclePatient.setBloodType("O+");
-        
+
         // EPA consent
         lifecyclePatient.setEpaEnabled(true);
         lifecyclePatient.setEpaSyncStatus("synced");
-        
+
         // Discharge
         lifecyclePatient.setStatus("discharged");
-        
+
         // Verify complete lifecycle
         assertAll("Complete lifecycle",
-            () -> assertEquals("Lifecycle", lifecyclePatient.getFirstName()),
-            () -> assertEquals("discharged", lifecyclePatient.getStatus()),
-            () -> assertTrue(lifecyclePatient.getEpaEnabled()),
-            () -> assertNotNull(lifecyclePatient.getAllergies())
-        );
+                () -> assertEquals("Lifecycle", lifecyclePatient.getFirstName()),
+                () -> assertEquals("discharged", lifecyclePatient.getStatus()),
+                () -> assertTrue(lifecyclePatient.getEpaEnabled()),
+                () -> assertNotNull(lifecyclePatient.getAllergies()));
     }
 
     @Test
@@ -150,12 +158,12 @@ class PatientIntegrationTest {
         // Verify all patients are unique
         assertNotEquals(patient1.getInsuranceNumber(), patient2.getInsuranceNumber());
         assertNotEquals(patient2.getInsuranceNumber(), patient3.getInsuranceNumber());
-        
+
         // Verify different statuses
         patient1.setStatus("active");
         patient2.setStatus("active");
         patient3.setStatus("discharged");
-        
+
         assertEquals("active", patient1.getStatus());
         assertEquals("discharged", patient3.getStatus());
     }
@@ -164,9 +172,9 @@ class PatientIntegrationTest {
     @DisplayName("Integration: EPA synchronization for multiple patients")
     void testMultiplePatientEPASync() {
         Patient[] patients = {
-            createPatient("EPA", "Patient1", "INS-EPA-001"),
-            createPatient("EPA", "Patient2", "INS-EPA-002"),
-            createPatient("EPA", "Patient3", "INS-EPA-003")
+                createPatient("EPA", "Patient1", "INS-EPA-001"),
+                createPatient("EPA", "Patient2", "INS-EPA-002"),
+                createPatient("EPA", "Patient3", "INS-EPA-003")
         };
 
         // Enable EPA for all
@@ -198,7 +206,7 @@ class PatientIntegrationTest {
     @DisplayName("Integration: Error handling workflow")
     void testErrorHandlingWorkflow() {
         Patient errorPatient = createPatient("Error", "Test", "INS-ERROR-001");
-        
+
         // Simulate EPA sync error
         errorPatient.setEpaEnabled(true);
         errorPatient.setEpaSyncStatus("error");
