@@ -142,6 +142,8 @@ cp target/hospital-management.war $JBOSS_HOME/standalone/deployments/
 
 ```
 hospital-system/
+├── doc/                         # Software documentation
+├── sql/                         # SQL files
 ├── src/
 │   ├── main/
 │   │   ├── java/com/hospital/
