@@ -66,11 +66,14 @@ public class PatientResource {
     }
 
     @GET
-    @Path("/search")
-    public Response searchPatients(@QueryParam("q") String query) {
+    @Path("/random")
+    public Response getRandomPatients(@QueryParam("limit") Integer limit) {
         try {
-            List<Patient> patients = em.createNamedQuery("Patient.searchByName", Patient.class)
-                    .setParameter("search", "%" + query + "%")
+            if (limit == null) {
+                limit = 50;
+            }
+            List<Patient> patients = em.createNamedQuery("Patient.findRandom", Patient.class)
+                    .setMaxResults(limit)
                     .getResultList();
             GenericEntity<List<Patient>> entity = new GenericEntity<List<Patient>>(patients) {
             };
@@ -79,6 +82,94 @@ public class PatientResource {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity("{\"error\": \"" + e.getMessage() + "\"}").build();
         }
+    }
+
+    @GET
+    @Path("/search")
+    public Response searchPatients(
+            @QueryParam("q") String query,
+            @QueryParam("offset") Integer offset,
+            @QueryParam("limit") Integer limit) {
+        try {
+            if (query == null || query.trim().isEmpty()) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity("{\"error\": \"Suchbegriff erforderlich\"}").build();
+            }
+
+            if (offset == null)
+                offset = 0;
+            if (limit == null)
+                limit = 100;
+
+            String searchPattern = "%" + query.trim() + "%";
+
+            // Hole Gesamtanzahl
+            Long totalCount = em.createNamedQuery("Patient.countByNameSearch", Long.class)
+                    .setParameter("search", searchPattern)
+                    .getSingleResult();
+
+            // Hole paginierte Ergebnisse
+            List<Patient> patients = em.createNamedQuery("Patient.searchByNameOptimized", Patient.class)
+                    .setParameter("search", searchPattern)
+                    .setFirstResult(offset)
+                    .setMaxResults(limit)
+                    .getResultList();
+
+            // Baue Response mit Metadaten
+            String json = String.format(
+                    "{\"total\":%d,\"offset\":%d,\"limit\":%d,\"hasMore\":%b,\"patients\":[",
+                    totalCount, offset, limit, (offset + limit) < totalCount);
+
+            StringBuilder patientsJson = new StringBuilder();
+            for (int i = 0; i < patients.size(); i++) {
+                Patient p = patients.get(i);
+                if (i > 0)
+                    patientsJson.append(",");
+                patientsJson.append(String.format(
+                        "{\"id\":%d,\"firstName\":\"%s\",\"lastName\":\"%s\"," +
+                                "\"dateOfBirth\":\"%s\",\"gender\":\"%s\"," +
+                                "\"phone\":\"%s\",\"email\":\"%s\",\"address\":\"%s\"," +
+                                "\"insuranceNumber\":\"%s\",\"bloodType\":\"%s\"," +
+                                "\"allergies\":\"%s\",\"emergencyContactName\":\"%s\"," +
+                                "\"emergencyContactPhone\":\"%s\",\"status\":\"%s\"," +
+                                "\"epaEnabled\":%b,\"epaSyncStatus\":\"%s\"}",
+                        p.getId(),
+                        escapeJson(p.getFirstName()),
+                        escapeJson(p.getLastName()),
+                        p.getDateOfBirth().toString(),
+                        escapeJson(p.getGender()),
+                        escapeJson(p.getPhone()),
+                        escapeJson(p.getEmail()),
+                        escapeJson(p.getAddress()),
+                        escapeJson(p.getInsuranceNumber()),
+                        escapeJson(p.getBloodType()),
+                        escapeJson(p.getAllergies()),
+                        escapeJson(p.getEmergencyContactName()),
+                        escapeJson(p.getEmergencyContactPhone()),
+                        escapeJson(p.getStatus()),
+                        p.getEpaEnabled() != null ? p.getEpaEnabled() : true,
+                        escapeJson(p.getEpaSyncStatus())));
+            }
+
+            json += patientsJson.toString() + "]}";
+
+            return Response.ok(json).type(MediaType.APPLICATION_JSON).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("{\"error\": \"" + e.getMessage() + "\"}").build();
+        }
+    }
+
+    // Hilfsmethode für JSON Escaping
+    private String escapeJson(String str) {
+        if (str == null)
+            return "";
+        return str.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t");
     }
 
     @POST

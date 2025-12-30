@@ -24,7 +24,17 @@ import jakarta.persistence.Table;
         @NamedQuery(name = "Patient.findAll", query = "SELECT p FROM Patient p ORDER BY p.lastName"),
         @NamedQuery(name = "Patient.findActive", query = "SELECT p FROM Patient p WHERE p.status = 'active' ORDER BY p.lastName"),
         @NamedQuery(name = "Patient.searchByName", query = "SELECT p FROM Patient p WHERE LOWER(p.firstName) LIKE LOWER(:search) OR LOWER(p.lastName) LIKE LOWER(:search)"),
-        @NamedQuery(name = "Patient.findByEpaId", query = "SELECT p FROM Patient p WHERE p.epaId = :epaId")
+        @NamedQuery(name = "Patient.findByEpaId", query = "SELECT p FROM Patient p WHERE p.epaId = :epaId"),
+
+        // NEU: Hinzufügen
+        @NamedQuery(name = "Patient.findRandom", query = "SELECT p FROM Patient p ORDER BY function('RANDOM')"),
+
+        @NamedQuery(name = "Patient.searchByNameOptimized", query = "SELECT p FROM Patient p WHERE " +
+                "LOWER(CONCAT(p.firstName, ' ', p.lastName)) LIKE LOWER(:search) " +
+                "ORDER BY p.lastName, p.firstName"),
+
+        @NamedQuery(name = "Patient.countByNameSearch", query = "SELECT COUNT(p) FROM Patient p WHERE " +
+                "LOWER(CONCAT(p.firstName, ' ', p.lastName)) LIKE LOWER(:search)")
 })
 public class Patient {
 

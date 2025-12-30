@@ -540,7 +540,7 @@
                     <input type="text" id="searchInput" placeholder="Patient suchen (Name)...">
                 </div>
                 <button class="btn-primary" onclick="openModal()">Neuer Patient</button>
-                <button class="btn-primary" onclick="loadPatients()">Aktualisieren</button>
+                <button class="btn-primary" onclick="refreshPatients()">Aktualisieren</button>
                 <button class="btn-info" onclick="showEPAStats()">EPA-Statistiken</button>
                 <button class="btn-success" onclick="syncAllToEPA()">Alle zu EPA synchronisieren</button>
             </div>
@@ -697,6 +697,13 @@
         const EPA_API_URL = '/hospital-management/api/epa';
         let currentEditId = null;
 
+        let isInitialLoad = true;
+        let currentSearchQuery = '';
+        let searchOffset = 0;
+        const SEARCH_LIMIT = 100;
+        let isLoadingMore = false;
+        let hasMoreResults = true;
+
         /* Generic dialog modal helpers (replaces alert/confirm) */
         function escapeHtml(unsafe) {
             return String(unsafe)
@@ -774,7 +781,8 @@
 
         window.addEventListener('load', () => {
             checkEPAConnection();
-            loadPatients();
+            isInitialLoad = true;
+            loadPatients(''); // Leerer String triggert Initial-Load mit zufälligen Patienten
         });
 
         async function checkEPAConnection() {
@@ -849,41 +857,89 @@
             }
         }
 
+        function refreshPatients() {
+            const searchInput = document.getElementById('searchInput');
+            searchInput.value = '';
+            isInitialLoad = true;
+            currentSearchQuery = '';
+            searchOffset = 0;
+            hasMoreResults = true;
+            loadPatients();
+        }
+
         async function loadPatients(filter = '') {
             const tableDiv = document.getElementById('patientsTable');
-            tableDiv.innerHTML = '<div class="loading">Lade Patienten...</div>';
+
+            // Initial: Zeige zufällige Patienten
+            if (isInitialLoad && !filter) {
+                tableDiv.innerHTML = '<div class="loading">Lade initiale Patientenauswahl...</div>';
+                try {
+                    const response = await fetch(`${API_URL}/random?limit=50`);
+                    if (!response.ok) {
+                        throw new Error(`Status ${response.status}`);
+                    }
+                    const patients = await response.json();
+                    renderPatients(patients, false);
+                    isInitialLoad = false;
+                } catch (error) {
+                    tableDiv.innerHTML = `<p style="text-align: center; padding: 40px; color: #6c757d;">Fehler: ${error.message}</p>`;
+                }
+                return;
+            }
+
+            // Bei Filterung: Reset und neue Suche
+            if (filter !== currentSearchQuery) {
+                currentSearchQuery = filter;
+                searchOffset = 0;
+                hasMoreResults = true;
+                tableDiv.innerHTML = '<div class="loading">Suche Patienten...</div>';
+            }
+
+            // Keine Suche ohne Filter nach Initial-Load
+            if (!filter) {
+                return;
+            }
 
             try {
-                let url = API_URL;
-                if (filter) {
-                    url = `${API_URL}/search?q=${encodeURIComponent(filter)}`;
-                }
-
+                const url = `${API_URL}/search?q=${encodeURIComponent(filter)}&offset=${searchOffset}&limit=${SEARCH_LIMIT}`;
                 const response = await fetch(url);
 
                 if (!response.ok) {
-                    const text = await response.text().catch(() => '');
-                    console.error('Failed to load patients:', response.status, text);
-                    tableDiv.innerHTML = `<p style="text-align: center; padding: 40px; color: #6c757d;">Fehler beim Laden (Status ${response.status})</p>`;
-                    return;
+                    throw new Error(`Status ${response.status}`);
                 }
 
-                let patients;
-                try {
-                    patients = await response.json();
-                } catch (parseErr) {
-                    const text = await response.text().catch(() => '');
-                    console.error('Invalid JSON from patients endpoint:', parseErr, text);
-                    tableDiv.innerHTML = `<p style="text-align: center; padding: 40px; color: #6c757d;">Ungültige Server-Antwort</p>`;
-                    return;
+                const data = await response.json();
+                hasMoreResults = data.hasMore;
+
+                if (searchOffset === 0) {
+                    // Erste Seite: Ersetze Tabelle
+                    renderPatients(data.patients, true, data.total);
+                } else {
+                    // Weitere Seiten: Füge hinzu
+                    appendPatients(data.patients);
                 }
 
-                if (!Array.isArray(patients) || patients.length === 0) {
-                    tableDiv.innerHTML = '<p style="text-align: center; padding: 40px; color: #6c757d;">Keine Patienten gefunden</p>';
-                    return;
-                }
+                isLoadingMore = false;
+            } catch (error) {
+                tableDiv.innerHTML = `<p style="text-align: center; padding: 40px; color: #6c757d;">Fehler: ${error.message}</p>`;
+                isLoadingMore = false;
+            }
+        }
 
-                let html = `
+        function renderPatients(patients, sorted = false, totalCount = null) {
+            const tableDiv = document.getElementById('patientsTable');
+
+            if (!Array.isArray(patients) || patients.length === 0) {
+                tableDiv.innerHTML = '<p style="text-align: center; padding: 40px; color: #6c757d;">Keine Patienten gefunden</p>';
+                return;
+            }
+
+            let headerInfo = sorted && totalCount ?
+                `<p style="margin-bottom: 10px; color: var(--text-secondary);">Gefunden: ${totalCount} Patienten</p>` :
+                `<p style="margin-bottom: 10px; color: var(--text-secondary);">Zufällige Auswahl von ${patients.length} Patienten</p>`;
+
+            let html = headerInfo + `
+                <div id="tableContainer">
                     <table>
                         <thead>
                             <tr>
@@ -897,35 +953,110 @@
                                 <th>Aktionen</th>
                             </tr>
                         </thead>
-                        <tbody>
-                `;
+                        <tbody id="patientTableBody">
+            `;
 
-                patients.forEach(p => {
-                    html += `
-                        <tr>
-                            <td>${p.id}</td>
-                            <td><strong>${p.firstName} ${p.lastName}</strong></td>
-                            <td>${formatDate(p.dateOfBirth)}</td>
-                            <td>${p.insuranceNumber}</td>
-                            <td>${p.bloodType || '-'}</td>
-                            <td><span class="status-badge">${p.status === 'active' ? 'Aktiv' : 'Entlassen'}</span></td>
-                            <td><span class="epa-badge">${p.epaEnabled ? (p.epaSyncStatus || 'Pending') : 'Aus'}</span></td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button class="btn-edit" title="Patient bearbeiten" onclick="editPatient(${p.id})">✏️</button>
-                                    <button class="btn-edit" title="Zur EPA synchronisieren" onclick="syncToEPA(${p.id})">🔄</button>
-                                    <button class="btn-edit" title="Patient löschen" onclick="deletePatient(${p.id})">❌</button>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
+            patients.forEach(p => {
+                html += createPatientRow(p);
+            });
+
+            html += '</tbody></table>';
+
+            if (sorted && hasMoreResults) {
+                html += '<div id="loadMoreContainer" style="text-align: center; padding: 20px;"><button class="btn-primary" onclick="loadMorePatients()">Weitere Ergebnisse laden</button></div>';
+            }
+
+            html += '</div>';
+            tableDiv.innerHTML = html;
+
+            // Scroll-Event für infinite scroll
+            if (sorted && hasMoreResults) {
+                setupInfiniteScroll();
+            }
+        }
+
+        // Neue Hilfsfunktion für Patienten-Zeile
+        function createPatientRow(p) {
+            return `
+                <tr>
+                    <td>${p.id}</td>
+                    <td><strong>${p.firstName} ${p.lastName}</strong></td>
+                    <td>${formatDate(p.dateOfBirth)}</td>
+                    <td>${p.insuranceNumber}</td>
+                    <td>${p.bloodType || '-'}</td>
+                    <td><span class="status-badge">${p.status === 'active' ? 'Aktiv' : 'Entlassen'}</span></td>
+                    <td><span class="epa-badge">${p.epaEnabled ? (p.epaSyncStatus || 'Pending') : 'Aus'}</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-edit" title="Patient bearbeiten" onclick="editPatient(${p.id})">✏️</button>
+                            <button class="btn-edit" title="Zur EPA synchronisieren" onclick="syncToEPA(${p.id})">🔄</button>
+                            <button class="btn-edit" title="Patient löschen" onclick="deletePatient(${p.id})">❌</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        // Neue Funktion zum Anhängen weiterer Patienten
+        function appendPatients(patients) {
+            const tbody = document.getElementById('patientTableBody');
+            if (!tbody) return;
+
+            patients.forEach(p => {
+                const row = createPatientRow(p);
+                // Entferne <tr> Tags für innerHTML
+                const rowContent = row.replace(/<\/?tr>/g, '');
+                const tr = document.createElement('tr');
+                tr.innerHTML = rowContent;
+                tbody.appendChild(tr);
+            });
+
+            // Update "Mehr laden" Button
+            const loadMoreBtn = document.querySelector('#loadMoreContainer button');
+            if (loadMoreBtn) {
+                loadMoreBtn.textContent = 'Weitere Ergebnisse laden';
+                loadMoreBtn.disabled = false;
+            }
+        }
+
+        // Neue Funktion für "Mehr laden" Button
+        async function loadMorePatients() {
+            if (isLoadingMore || !hasMoreResults) return;
+
+            isLoadingMore = true;
+            searchOffset += SEARCH_LIMIT;
+
+            const loadMoreBtn = document.querySelector('#loadMoreContainer button');
+            if (loadMoreBtn) {
+                loadMoreBtn.textContent = 'Lädt...';
+                loadMoreBtn.disabled = true;
+            }
+
+            await loadPatients(currentSearchQuery);
+
+            // Entferne "Mehr laden" Button wenn keine weiteren Ergebnisse
+            if (!hasMoreResults) {
+                const container = document.getElementById('loadMoreContainer');
+                if (container) container.remove();
+            }
+        }
+
+        // Infinite Scroll Setup
+        function setupInfiniteScroll() {
+            const tableContainer = document.getElementById('tableContainer');
+            if (!tableContainer) return;
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && hasMoreResults && !isLoadingMore && currentSearchQuery) {
+                        loadMorePatients();
+                    }
                 });
+            }, { threshold: 0.5 });
 
-                html += '</tbody></table>';
-                tableDiv.innerHTML = html;
-
-            } catch (error) {
-                tableDiv.innerHTML = `<p style="text-align: center; padding: 40px; color: #6c757d;">Fehler beim Laden: ${error.message}</p>`;
+            const loadMoreContainer = document.getElementById('loadMoreContainer');
+            if (loadMoreContainer) {
+                observer.observe(loadMoreContainer);
             }
         }
 
@@ -1090,14 +1221,24 @@
         let searchTimeout;
         document.getElementById('searchInput').addEventListener('input', (e) => {
             clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                const query = e.target.value.trim();
-                if (query.length >= 2) {
+            const query = e.target.value.trim();
+
+            // Bei leerem Input: Zeige wieder zufällige Auswahl
+            if (query.length === 0) {
+                isInitialLoad = true;
+                currentSearchQuery = '';
+                searchOffset = 0;
+                hasMoreResults = true;
+                loadPatients();
+                return;
+            }
+
+            // Suche erst ab 2 Zeichen mit 400ms Debounce
+            if (query.length >= 2) {
+                searchTimeout = setTimeout(() => {
                     loadPatients(query);
-                } else if (query.length === 0) {
-                    loadPatients();
-                }
-            }, 300);
+                }, 400);
+            }
         });
     </script>
 </body>
