@@ -267,6 +267,10 @@ curl -X POST http://localhost:8080/hospital-management/api/patients \
 curl -X POST http://localhost:8080/hospital-management/api/epa/sync/1
 ```
 
+### Order List of Patients 
+
+Es werden zu Beginn zufällig aus allen mehr als 1000 Patienten in der DB nur etwas mehr als die Bildschirmhöhe angezeigt. Diese Anzeige ist nicht geordnet, da der Benutzer nicht das Gefühl haben darf, dass initial schon eine Ordnung in der Anzeige existiert, welche er beim ersten Anblick schon erahnen muss, um überhaupt eine Chance zu haben, diese Datenmenge aufs erste schnell zu beherrschen. Der Benutzer allein, wenn er zu tippen beginnt in dem Input Feld, das die Filterfunktion ermöglicht, sorgt in der Datenmenge beim Tippen für Ordnung. Der Filter sortiert die Ergebnismenge sortiert. Beschränkt bei dieser Filterung wird die Ergebnismenge nicht mehr. Wichtig ist, dass der Arbeitsspeicher geschont wird und die Daten bei Bedarf, also beim Tippen, nachgeladen werden. Es ist davon auszugehen, dass mehr als 10 Mio. Patienten in diesem Krankenhaus behandelt werden.
+
 ### Run Unit Tests
 
 ```bash
