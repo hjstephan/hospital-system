@@ -4,9 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -139,25 +138,238 @@ class PatientResourceTest {
     }
 
     @Test
-    @DisplayName("Should search patients by name")
+    @DisplayName("Should search patients by name with pagination")
     void testSearchPatients() {
         // Arrange
+        String searchQuery = "Max";
+        String searchPattern = "%" + searchQuery + "%";
+
         List<Patient> searchResults = Arrays.asList(testPatient);
-        when(entityManager.createNamedQuery("Patient.searchByName", Patient.class))
+        Long totalCount = 1L;
+
+        // Mock für Count Query
+        TypedQuery<Long> countQuery = mock(TypedQuery.class);
+        when(entityManager.createNamedQuery("Patient.countByNameSearch", Long.class))
+                .thenReturn(countQuery);
+        when(countQuery.setParameter("search", searchPattern))
+                .thenReturn(countQuery);
+        when(countQuery.getSingleResult())
+                .thenReturn(totalCount);
+
+        // Mock für Search Query
+        when(entityManager.createNamedQuery("Patient.searchByNameOptimized", Patient.class))
                 .thenReturn(typedQuery);
-        when(typedQuery.setParameter(eq("search"), anyString())).thenReturn(typedQuery);
-        when(typedQuery.getResultList()).thenReturn(searchResults);
+        when(typedQuery.setParameter("search", searchPattern))
+                .thenReturn(typedQuery);
+        when(typedQuery.setFirstResult(0))
+                .thenReturn(typedQuery);
+        when(typedQuery.setMaxResults(100))
+                .thenReturn(typedQuery);
+        when(typedQuery.getResultList())
+                .thenReturn(searchResults);
 
         // Act
-        Response response = patientResource.searchPatients("Max");
+        Response response = patientResource.searchPatients(searchQuery, 0, 100);
 
         // Assert
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
-        Object entity = response.getEntity();
-        assertTrue(entity instanceof List);
-        List<?> raw = (List<?>) entity;
-        List<Patient> result = raw.stream().map(o -> (Patient) o).collect(Collectors.toList());
-        assertEquals(1, result.size());
+
+        // Verify that queries were called correctly
+        verify(countQuery).setParameter("search", searchPattern);
+        verify(countQuery).getSingleResult();
+        verify(typedQuery).setParameter("search", searchPattern);
+        verify(typedQuery).setFirstResult(0);
+        verify(typedQuery).setMaxResults(100);
+        verify(typedQuery).getResultList();
+    }
+
+    @Test
+    @DisplayName("Should return bad request when search query is empty")
+    void testSearchPatientsEmptyQuery() {
+        // Act
+        Response response = patientResource.searchPatients("", 0, 100);
+
+        // Assert
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+    }
+
+    @Test
+    @DisplayName("Should return bad request when search query is null")
+    void testSearchPatientsNullQuery() {
+        // Act
+        Response response = patientResource.searchPatients(null, 0, 100);
+
+        // Assert
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+    }
+
+    @Test
+    @DisplayName("Should use default values for offset and limit")
+    void testSearchPatientsDefaultPagination() {
+        // Arrange
+        String searchQuery = "Schmidt";
+        String searchPattern = "%" + searchQuery + "%";
+
+        List<Patient> searchResults = Arrays.asList(testPatient);
+        Long totalCount = 1L;
+
+        // Mock für Count Query
+        TypedQuery<Long> countQuery = mock(TypedQuery.class);
+        when(entityManager.createNamedQuery("Patient.countByNameSearch", Long.class))
+                .thenReturn(countQuery);
+        when(countQuery.setParameter("search", searchPattern))
+                .thenReturn(countQuery);
+        when(countQuery.getSingleResult())
+                .thenReturn(totalCount);
+
+        // Mock für Search Query
+        when(entityManager.createNamedQuery("Patient.searchByNameOptimized", Patient.class))
+                .thenReturn(typedQuery);
+        when(typedQuery.setParameter("search", searchPattern))
+                .thenReturn(typedQuery);
+        when(typedQuery.setFirstResult(0))
+                .thenReturn(typedQuery);
+        when(typedQuery.setMaxResults(100))
+                .thenReturn(typedQuery);
+        when(typedQuery.getResultList())
+                .thenReturn(searchResults);
+
+        // Act - null für offset und limit
+        Response response = patientResource.searchPatients(searchQuery, null, null);
+
+        // Assert
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+
+        // Verify defaults were used
+        verify(typedQuery).setFirstResult(0); // Default: 0
+        verify(typedQuery).setMaxResults(100); // Default: 100
+    }
+
+    @Test
+    @DisplayName("Should indicate hasMore when more results available")
+    void testSearchPatientsHasMore() {
+        // Arrange
+        String searchQuery = "Müller";
+        String searchPattern = "%" + searchQuery + "%";
+
+        List<Patient> searchResults = Arrays.asList(testPatient);
+        Long totalCount = 250L; // 250 Ergebnisse insgesamt
+
+        // Mock für Count Query
+        TypedQuery<Long> countQuery = mock(TypedQuery.class);
+        when(entityManager.createNamedQuery("Patient.countByNameSearch", Long.class))
+                .thenReturn(countQuery);
+        when(countQuery.setParameter("search", searchPattern))
+                .thenReturn(countQuery);
+        when(countQuery.getSingleResult())
+                .thenReturn(totalCount);
+
+        // Mock für Search Query
+        when(entityManager.createNamedQuery("Patient.searchByNameOptimized", Patient.class))
+                .thenReturn(typedQuery);
+        when(typedQuery.setParameter("search", searchPattern))
+                .thenReturn(typedQuery);
+        when(typedQuery.setFirstResult(0))
+                .thenReturn(typedQuery);
+        when(typedQuery.setMaxResults(100))
+                .thenReturn(typedQuery);
+        when(typedQuery.getResultList())
+                .thenReturn(searchResults);
+
+        // Act
+        Response response = patientResource.searchPatients(searchQuery, 0, 100);
+
+        // Assert
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+
+        // Verify that count query was called (hasMore depends on total count)
+        verify(countQuery).getSingleResult();
+    }
+
+    @Test
+    @DisplayName("Should return random patients")
+    void testGetRandomPatients() {
+        // Arrange
+        List<Patient> randomPatients = Arrays.asList(testPatient);
+        when(entityManager.createNamedQuery("Patient.findRandom", Patient.class))
+                .thenReturn(typedQuery);
+        when(typedQuery.setMaxResults(50))
+                .thenReturn(typedQuery);
+        when(typedQuery.getResultList())
+                .thenReturn(randomPatients);
+
+        // Act
+        Response response = patientResource.getRandomPatients(50);
+
+        // Assert
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertNotNull(response.getEntity());
+
+        // Verify query was called correctly
+        verify(typedQuery).setMaxResults(50);
+        verify(typedQuery).getResultList();
+    }
+
+    @Test
+    @DisplayName("Should use default limit for random patients")
+    void testGetRandomPatientsDefaultLimit() {
+        // Arrange
+        List<Patient> randomPatients = Arrays.asList(testPatient);
+        when(entityManager.createNamedQuery("Patient.findRandom", Patient.class))
+                .thenReturn(typedQuery);
+        when(typedQuery.setMaxResults(50)) // Default ist 50
+                .thenReturn(typedQuery);
+        when(typedQuery.getResultList())
+                .thenReturn(randomPatients);
+
+        // Act
+        Response response = patientResource.getRandomPatients(null);
+
+        // Assert
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        verify(typedQuery).setMaxResults(50); // Verify default wurde verwendet
+    }
+
+    @Test
+    @DisplayName("Should handle search with pagination offset")
+    void testSearchPatientsWithOffset() {
+        // Arrange
+        String searchQuery = "Test";
+        String searchPattern = "%" + searchQuery + "%";
+
+        List<Patient> searchResults = Arrays.asList(testPatient);
+        Long totalCount = 150L;
+
+        // Mock für Count Query
+        TypedQuery<Long> countQuery = mock(TypedQuery.class);
+        when(entityManager.createNamedQuery("Patient.countByNameSearch", Long.class))
+                .thenReturn(countQuery);
+        when(countQuery.setParameter("search", searchPattern))
+                .thenReturn(countQuery);
+        when(countQuery.getSingleResult())
+                .thenReturn(totalCount);
+
+        // Mock für Search Query
+        when(entityManager.createNamedQuery("Patient.searchByNameOptimized", Patient.class))
+                .thenReturn(typedQuery);
+        when(typedQuery.setParameter("search", searchPattern))
+                .thenReturn(typedQuery);
+        when(typedQuery.setFirstResult(100))
+                .thenReturn(typedQuery);
+        when(typedQuery.setMaxResults(50))
+                .thenReturn(typedQuery);
+        when(typedQuery.getResultList())
+                .thenReturn(searchResults);
+
+        // Act
+        Response response = patientResource.searchPatients(searchQuery, 100, 50);
+
+        // Assert
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+
+        // Verify pagination parameters
+        verify(typedQuery).setFirstResult(100);
+        verify(typedQuery).setMaxResults(50);
     }
 
     @Test

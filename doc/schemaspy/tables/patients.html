@@ -73,7 +73,7 @@
             <div class="content-wrapper">
                 <!-- Content Header (Page header) -->
                 <section class="content-header">
-                    <h1>patients</h1><p><span id="recordNumber">3</span> rows</p><br />
+                    <h1>patients</h1><p><span id="recordNumber">1003</span> rows</p><br />
                 </section>
                 <!-- Main content -->
                 <section class="content">
@@ -531,6 +531,23 @@
                                     </td>
                                     <td><p>Datum der EPA-Einwilligungserklärung</p></td>
                                 </tr>
+                                <tr>
+                                    <td><span id="search_key">search_key</span></td>
+                                    <td>varchar</td>
+                                    <td>255</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -584,6 +601,12 @@
                                     <td>Performance</td>
                                     <td><span title='Ascending'>Asc</span></td>
                                     <td>epa_sync_status</td>
+                                </tr>
+                                <tr>
+                                    <td title='Indexed'>idx_patients_fullname_trgm</td>
+                                    <td>Performance</td>
+                                    <td></td>
+                                    <td></td>
                                 </tr>
                                 <tr>
                                     <td title='Indexed'>idx_patients_insurance</td>

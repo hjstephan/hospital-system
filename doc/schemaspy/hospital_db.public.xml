@@ -100,7 +100,7 @@
             <column ascending="true" name="patient_id"/>
          </index>
       </table>
-      <table catalog="hospital_db" name="patients" numRows="3" remarks="" schema="public" type="TABLE">
+      <table catalog="hospital_db" name="patients" numRows="1003" remarks="" schema="public" type="TABLE">
          <column autoUpdated="true" defaultValue="nextval('patients_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="bigserial" typeCode="-5">
             <child catalog="hospital_db" column="patient_id" foreignKey="diagnoses_patient_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="diagnoses"/>
             <child catalog="hospital_db" column="patient_id" foreignKey="epa_sync_log_patient_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="epa_sync_log"/>
@@ -129,6 +129,7 @@
          <column autoUpdated="false" defaultValue="null" digits="0" id="21" name="epa_sync_error" nullable="true" remarks="Fehlermeldung bei gescheiterter EPA-Synchronisation" size="2147483647" type="text" typeCode="12"/>
          <column autoUpdated="false" defaultValue="true" digits="0" id="22" name="epa_enabled" nullable="true" remarks="Gibt an, ob Patient der EPA-Synchronisation zugestimmt hat" size="1" type="bool" typeCode="-7"/>
          <column autoUpdated="false" defaultValue="null" digits="6" id="23" name="epa_consent_date" nullable="true" remarks="Datum der EPA-Einwilligungserklärung" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="24" name="search_key" nullable="true" remarks="" size="255" type="varchar" typeCode="12"/>
          <primaryKey column="id" sequenceNumberInPK="1"/>
          <index name="patients_pkey" unique="true">
             <column ascending="true" name="id"/>
@@ -142,6 +143,7 @@
          <index name="idx_patients_epa_sync_status" unique="false">
             <column ascending="true" name="epa_sync_status"/>
          </index>
+         <index name="idx_patients_fullname_trgm" unique="false"/>
          <index name="idx_patients_insurance" unique="false">
             <column ascending="true" name="insurance_number"/>
          </index>

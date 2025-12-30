@@ -6,7 +6,7 @@ Hospital Patient Management System,com.hospital.epa,EPAIntegrationService,180,11
 Hospital Patient Management System,com.hospital.rest,PatientResource.new GenericEntity() {...},0,4,0,0,0,1,0,1,0,1
 Hospital Patient Management System,com.hospital.rest,PatientResource.new GenericEntity() {...},0,4,0,0,0,1,0,1,0,1
 Hospital Patient Management System,com.hospital.rest,EPAResource,137,280,10,16,41,69,10,13,0,10
-Hospital Patient Management System,com.hospital.rest,PatientResource,45,199,0,8,15,51,0,11,0,7
+Hospital Patient Management System,com.hospital.rest,PatientResource,61,461,2,26,20,101,2,21,0,9
 Hospital Patient Management System,com.hospital.rest,RestConfig,3,0,0,0,2,0,1,0,1,0
 Hospital Patient Management System,com.hospital.entity,Medication,0,45,0,0,0,20,0,13,0,13
 Hospital Patient Management System,com.hospital.entity,Patient,0,204,1,1,0,86,1,53,0,53

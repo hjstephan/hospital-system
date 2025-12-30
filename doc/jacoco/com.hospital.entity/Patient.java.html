@@ -24,9 +24,19 @@ import jakarta.persistence.Table;
         @NamedQuery(name = &quot;Patient.findAll&quot;, query = &quot;SELECT p FROM Patient p ORDER BY p.lastName&quot;),
         @NamedQuery(name = &quot;Patient.findActive&quot;, query = &quot;SELECT p FROM Patient p WHERE p.status = 'active' ORDER BY p.lastName&quot;),
         @NamedQuery(name = &quot;Patient.searchByName&quot;, query = &quot;SELECT p FROM Patient p WHERE LOWER(p.firstName) LIKE LOWER(:search) OR LOWER(p.lastName) LIKE LOWER(:search)&quot;),
-        @NamedQuery(name = &quot;Patient.findByEpaId&quot;, query = &quot;SELECT p FROM Patient p WHERE p.epaId = :epaId&quot;)
+        @NamedQuery(name = &quot;Patient.findByEpaId&quot;, query = &quot;SELECT p FROM Patient p WHERE p.epaId = :epaId&quot;),
+
+        // NEU: Hinzufügen
+        @NamedQuery(name = &quot;Patient.findRandom&quot;, query = &quot;SELECT p FROM Patient p ORDER BY function('RANDOM')&quot;),
+
+        @NamedQuery(name = &quot;Patient.searchByNameOptimized&quot;, query = &quot;SELECT p FROM Patient p WHERE &quot; +
+                &quot;LOWER(CONCAT(p.firstName, ' ', p.lastName)) LIKE LOWER(:search) &quot; +
+                &quot;ORDER BY p.lastName, p.firstName&quot;),
+
+        @NamedQuery(name = &quot;Patient.countByNameSearch&quot;, query = &quot;SELECT COUNT(p) FROM Patient p WHERE &quot; +
+                &quot;LOWER(CONCAT(p.firstName, ' ', p.lastName)) LIKE LOWER(:search)&quot;)
 })
-<span class="fc" id="L29">public class Patient {</span>
+<span class="fc" id="L39">public class Patient {</span>
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -74,7 +84,7 @@ import jakarta.persistence.Table;
     @Column(name = &quot;discharge_date&quot;)
     private LocalDateTime dischargeDate;
 
-<span class="fc" id="L77">    @Column(length = 20)</span>
+<span class="fc" id="L87">    @Column(length = 20)</span>
     private String status = &quot;active&quot;;
 
     @Column(name = &quot;created_at&quot;, updatable = false)
@@ -87,7 +97,7 @@ import jakarta.persistence.Table;
     @Column(name = &quot;epa_id&quot;, unique = true, length = 100)
     private String epaId; // ID in der elektronischen Patientenakte
 
-<span class="fc" id="L90">    @Column(name = &quot;epa_sync_status&quot;, length = 20)</span>
+<span class="fc" id="L100">    @Column(name = &quot;epa_sync_status&quot;, length = 20)</span>
     private String epaSyncStatus = &quot;pending&quot;; // pending, synced, error
 
     @Column(name = &quot;epa_last_sync&quot;)
@@ -96,8 +106,8 @@ import jakarta.persistence.Table;
     @Column(name = &quot;epa_sync_error&quot;, columnDefinition = &quot;TEXT&quot;)
     private String epaSyncError;
 
-<span class="fc" id="L99">    @Column(name = &quot;epa_enabled&quot;)</span>
-<span class="fc" id="L100">    private Boolean epaEnabled = true; // Ob Patient EPA-Synchronisation erlaubt</span>
+<span class="fc" id="L109">    @Column(name = &quot;epa_enabled&quot;)</span>
+<span class="fc" id="L110">    private Boolean epaEnabled = true; // Ob Patient EPA-Synchronisation erlaubt</span>
 
     @Column(name = &quot;epa_consent_date&quot;)
     private LocalDateTime epaConsentDate; // Wann Patient Einwilligung gegeben hat
@@ -110,220 +120,220 @@ import jakarta.persistence.Table;
 
     @PrePersist
     protected void onCreate() {
-<span class="fc" id="L113">        createdAt = LocalDateTime.now();</span>
-<span class="fc" id="L114">        updatedAt = LocalDateTime.now();</span>
-<span class="pc bpc" id="L115" title="1 of 2 branches missed.">        if (admissionDate == null) {</span>
-<span class="fc" id="L116">            admissionDate = LocalDateTime.now();</span>
+<span class="fc" id="L123">        createdAt = LocalDateTime.now();</span>
+<span class="fc" id="L124">        updatedAt = LocalDateTime.now();</span>
+<span class="pc bpc" id="L125" title="1 of 2 branches missed.">        if (admissionDate == null) {</span>
+<span class="fc" id="L126">            admissionDate = LocalDateTime.now();</span>
         }
-<span class="fc" id="L118">    }</span>
+<span class="fc" id="L128">    }</span>
 
     @PreUpdate
     protected void onUpdate() {
-<span class="fc" id="L122">        updatedAt = LocalDateTime.now();</span>
-<span class="fc" id="L123">    }</span>
+<span class="fc" id="L132">        updatedAt = LocalDateTime.now();</span>
+<span class="fc" id="L133">    }</span>
 
     // Bestehende Getters und Setters...
     public Long getId() {
-<span class="fc" id="L127">        return id;</span>
+<span class="fc" id="L137">        return id;</span>
     }
 
     public void setId(Long id) {
-<span class="fc" id="L131">        this.id = id;</span>
-<span class="fc" id="L132">    }</span>
+<span class="fc" id="L141">        this.id = id;</span>
+<span class="fc" id="L142">    }</span>
 
     public String getFirstName() {
-<span class="fc" id="L135">        return firstName;</span>
+<span class="fc" id="L145">        return firstName;</span>
     }
 
     public void setFirstName(String firstName) {
-<span class="fc" id="L139">        this.firstName = firstName;</span>
-<span class="fc" id="L140">    }</span>
+<span class="fc" id="L149">        this.firstName = firstName;</span>
+<span class="fc" id="L150">    }</span>
 
     public String getLastName() {
-<span class="fc" id="L143">        return lastName;</span>
+<span class="fc" id="L153">        return lastName;</span>
     }
 
     public void setLastName(String lastName) {
-<span class="fc" id="L147">        this.lastName = lastName;</span>
-<span class="fc" id="L148">    }</span>
+<span class="fc" id="L157">        this.lastName = lastName;</span>
+<span class="fc" id="L158">    }</span>
 
     public LocalDate getDateOfBirth() {
-<span class="fc" id="L151">        return dateOfBirth;</span>
+<span class="fc" id="L161">        return dateOfBirth;</span>
     }
 
     public void setDateOfBirth(LocalDate dateOfBirth) {
-<span class="fc" id="L155">        this.dateOfBirth = dateOfBirth;</span>
-<span class="fc" id="L156">    }</span>
+<span class="fc" id="L165">        this.dateOfBirth = dateOfBirth;</span>
+<span class="fc" id="L166">    }</span>
 
     public String getGender() {
-<span class="fc" id="L159">        return gender;</span>
+<span class="fc" id="L169">        return gender;</span>
     }
 
     public void setGender(String gender) {
-<span class="fc" id="L163">        this.gender = gender;</span>
-<span class="fc" id="L164">    }</span>
+<span class="fc" id="L173">        this.gender = gender;</span>
+<span class="fc" id="L174">    }</span>
 
     public String getPhone() {
-<span class="fc" id="L167">        return phone;</span>
+<span class="fc" id="L177">        return phone;</span>
     }
 
     public void setPhone(String phone) {
-<span class="fc" id="L171">        this.phone = phone;</span>
-<span class="fc" id="L172">    }</span>
+<span class="fc" id="L181">        this.phone = phone;</span>
+<span class="fc" id="L182">    }</span>
 
     public String getEmail() {
-<span class="fc" id="L175">        return email;</span>
+<span class="fc" id="L185">        return email;</span>
     }
 
     public void setEmail(String email) {
-<span class="fc" id="L179">        this.email = email;</span>
-<span class="fc" id="L180">    }</span>
+<span class="fc" id="L189">        this.email = email;</span>
+<span class="fc" id="L190">    }</span>
 
     public String getAddress() {
-<span class="fc" id="L183">        return address;</span>
+<span class="fc" id="L193">        return address;</span>
     }
 
     public void setAddress(String address) {
-<span class="fc" id="L187">        this.address = address;</span>
-<span class="fc" id="L188">    }</span>
+<span class="fc" id="L197">        this.address = address;</span>
+<span class="fc" id="L198">    }</span>
 
     public String getInsuranceNumber() {
-<span class="fc" id="L191">        return insuranceNumber;</span>
+<span class="fc" id="L201">        return insuranceNumber;</span>
     }
 
     public void setInsuranceNumber(String insuranceNumber) {
-<span class="fc" id="L195">        this.insuranceNumber = insuranceNumber;</span>
-<span class="fc" id="L196">    }</span>
+<span class="fc" id="L205">        this.insuranceNumber = insuranceNumber;</span>
+<span class="fc" id="L206">    }</span>
 
     public String getBloodType() {
-<span class="fc" id="L199">        return bloodType;</span>
+<span class="fc" id="L209">        return bloodType;</span>
     }
 
     public void setBloodType(String bloodType) {
-<span class="fc" id="L203">        this.bloodType = bloodType;</span>
-<span class="fc" id="L204">    }</span>
+<span class="fc" id="L213">        this.bloodType = bloodType;</span>
+<span class="fc" id="L214">    }</span>
 
     public String getAllergies() {
-<span class="fc" id="L207">        return allergies;</span>
+<span class="fc" id="L217">        return allergies;</span>
     }
 
     public void setAllergies(String allergies) {
-<span class="fc" id="L211">        this.allergies = allergies;</span>
-<span class="fc" id="L212">    }</span>
+<span class="fc" id="L221">        this.allergies = allergies;</span>
+<span class="fc" id="L222">    }</span>
 
     public String getEmergencyContactName() {
-<span class="fc" id="L215">        return emergencyContactName;</span>
+<span class="fc" id="L225">        return emergencyContactName;</span>
     }
 
     public void setEmergencyContactName(String emergencyContactName) {
-<span class="fc" id="L219">        this.emergencyContactName = emergencyContactName;</span>
-<span class="fc" id="L220">    }</span>
+<span class="fc" id="L229">        this.emergencyContactName = emergencyContactName;</span>
+<span class="fc" id="L230">    }</span>
 
     public String getEmergencyContactPhone() {
-<span class="fc" id="L223">        return emergencyContactPhone;</span>
+<span class="fc" id="L233">        return emergencyContactPhone;</span>
     }
 
     public void setEmergencyContactPhone(String emergencyContactPhone) {
-<span class="fc" id="L227">        this.emergencyContactPhone = emergencyContactPhone;</span>
-<span class="fc" id="L228">    }</span>
+<span class="fc" id="L237">        this.emergencyContactPhone = emergencyContactPhone;</span>
+<span class="fc" id="L238">    }</span>
 
     public LocalDateTime getAdmissionDate() {
-<span class="fc" id="L231">        return admissionDate;</span>
+<span class="fc" id="L241">        return admissionDate;</span>
     }
 
     public void setAdmissionDate(LocalDateTime admissionDate) {
-<span class="fc" id="L235">        this.admissionDate = admissionDate;</span>
-<span class="fc" id="L236">    }</span>
+<span class="fc" id="L245">        this.admissionDate = admissionDate;</span>
+<span class="fc" id="L246">    }</span>
 
     public LocalDateTime getDischargeDate() {
-<span class="fc" id="L239">        return dischargeDate;</span>
+<span class="fc" id="L249">        return dischargeDate;</span>
     }
 
     public void setDischargeDate(LocalDateTime dischargeDate) {
-<span class="fc" id="L243">        this.dischargeDate = dischargeDate;</span>
-<span class="fc" id="L244">    }</span>
+<span class="fc" id="L253">        this.dischargeDate = dischargeDate;</span>
+<span class="fc" id="L254">    }</span>
 
     public String getStatus() {
-<span class="fc" id="L247">        return status;</span>
+<span class="fc" id="L257">        return status;</span>
     }
 
     public void setStatus(String status) {
-<span class="fc" id="L251">        this.status = status;</span>
-<span class="fc" id="L252">    }</span>
+<span class="fc" id="L261">        this.status = status;</span>
+<span class="fc" id="L262">    }</span>
 
     public LocalDateTime getCreatedAt() {
-<span class="fc" id="L255">        return createdAt;</span>
+<span class="fc" id="L265">        return createdAt;</span>
     }
 
     public LocalDateTime getUpdatedAt() {
-<span class="fc" id="L259">        return updatedAt;</span>
+<span class="fc" id="L269">        return updatedAt;</span>
     }
 
     @JsonbTransient
     public List&lt;Diagnosis&gt; getDiagnoses() {
-<span class="fc" id="L264">        return diagnoses;</span>
+<span class="fc" id="L274">        return diagnoses;</span>
     }
 
     public void setDiagnoses(List&lt;Diagnosis&gt; diagnoses) {
-<span class="fc" id="L268">        this.diagnoses = diagnoses;</span>
-<span class="fc" id="L269">    }</span>
+<span class="fc" id="L278">        this.diagnoses = diagnoses;</span>
+<span class="fc" id="L279">    }</span>
 
     @JsonbTransient
     public List&lt;Medication&gt; getMedications() {
-<span class="fc" id="L273">        return medications;</span>
+<span class="fc" id="L283">        return medications;</span>
     }
 
     public void setMedications(List&lt;Medication&gt; medications) {
-<span class="fc" id="L277">        this.medications = medications;</span>
-<span class="fc" id="L278">    }</span>
+<span class="fc" id="L287">        this.medications = medications;</span>
+<span class="fc" id="L288">    }</span>
 
     // EPA-spezifische Getters und Setters
     public String getEpaId() {
-<span class="fc" id="L282">        return epaId;</span>
+<span class="fc" id="L292">        return epaId;</span>
     }
 
     public void setEpaId(String epaId) {
-<span class="fc" id="L286">        this.epaId = epaId;</span>
-<span class="fc" id="L287">    }</span>
+<span class="fc" id="L296">        this.epaId = epaId;</span>
+<span class="fc" id="L297">    }</span>
 
     public String getEpaSyncStatus() {
-<span class="fc" id="L290">        return epaSyncStatus;</span>
+<span class="fc" id="L300">        return epaSyncStatus;</span>
     }
 
     public void setEpaSyncStatus(String epaSyncStatus) {
-<span class="fc" id="L294">        this.epaSyncStatus = epaSyncStatus;</span>
-<span class="fc" id="L295">    }</span>
+<span class="fc" id="L304">        this.epaSyncStatus = epaSyncStatus;</span>
+<span class="fc" id="L305">    }</span>
 
     public LocalDateTime getEpaLastSync() {
-<span class="fc" id="L298">        return epaLastSync;</span>
+<span class="fc" id="L308">        return epaLastSync;</span>
     }
 
     public void setEpaLastSync(LocalDateTime epaLastSync) {
-<span class="fc" id="L302">        this.epaLastSync = epaLastSync;</span>
-<span class="fc" id="L303">    }</span>
+<span class="fc" id="L312">        this.epaLastSync = epaLastSync;</span>
+<span class="fc" id="L313">    }</span>
 
     public String getEpaSyncError() {
-<span class="fc" id="L306">        return epaSyncError;</span>
+<span class="fc" id="L316">        return epaSyncError;</span>
     }
 
     public void setEpaSyncError(String epaSyncError) {
-<span class="fc" id="L310">        this.epaSyncError = epaSyncError;</span>
-<span class="fc" id="L311">    }</span>
+<span class="fc" id="L320">        this.epaSyncError = epaSyncError;</span>
+<span class="fc" id="L321">    }</span>
 
     public Boolean getEpaEnabled() {
-<span class="fc" id="L314">        return epaEnabled;</span>
+<span class="fc" id="L324">        return epaEnabled;</span>
     }
 
     public void setEpaEnabled(Boolean epaEnabled) {
-<span class="fc" id="L318">        this.epaEnabled = epaEnabled;</span>
-<span class="fc" id="L319">    }</span>
+<span class="fc" id="L328">        this.epaEnabled = epaEnabled;</span>
+<span class="fc" id="L329">    }</span>
 
     public LocalDateTime getEpaConsentDate() {
-<span class="fc" id="L322">        return epaConsentDate;</span>
+<span class="fc" id="L332">        return epaConsentDate;</span>
     }
 
     public void setEpaConsentDate(LocalDateTime epaConsentDate) {
-<span class="fc" id="L326">        this.epaConsentDate = epaConsentDate;</span>
-<span class="fc" id="L327">    }</span>
+<span class="fc" id="L336">        this.epaConsentDate = epaConsentDate;</span>
+<span class="fc" id="L337">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
