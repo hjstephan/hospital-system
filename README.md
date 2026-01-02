@@ -163,6 +163,13 @@ hospital-system/
 │   │   │       └── persistence.xml
 │   │   └── webapp/
 │   │       └── index.html       # Frontend application
+│   │       └── styles.css       # CSS format
+│   │       └── ui/              # Javascript folder
+│   │           ├── app.js
+│   │           ├── ui-utils.js
+│   │           ├── patient-service.js
+│   │           ├── patient-render.js
+│   │           └── epa-service.js
 |   └── test/                    # test folder with tests
 └── pom.xml                      # Maven configuration
 ```
