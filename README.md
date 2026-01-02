@@ -161,16 +161,16 @@ hospital-system/
 │   │   ├── resources/
 │   │   │   └── META-INF/
 │   │   │       └── persistence.xml
-│   │   └── webapp/
-│   │       └── index.html       # Frontend application
+│   │   └── webapp/              # Frontend application
+│   │       └── index.html       # HTML web site
 │   │       └── styles.css       # CSS format
-│   │       └── ui/              # Javascript folder
+│   │       └── ui/              # Javascript files for UI logic
 │   │           ├── app.js
 │   │           ├── ui-utils.js
 │   │           ├── patient-service.js
 │   │           ├── patient-render.js
 │   │           └── epa-service.js
-|   └── test/                    # test folder with tests
+|   └── test/                    # Tests
 └── pom.xml                      # Maven configuration
 ```
 
@@ -218,6 +218,20 @@ hospital-system/
 - Emergency contacts
 - EPA integration fields (epa_id, sync_status, consent)
 
+## Sort Patients 
+
+(In german) Es werden zu Beginn zufällig aus allen mehr als 1000 Patienten in der DB nur etwas mehr als die Bildschirmhöhe angezeigt. Diese Anzeige ist nicht geordnet, da der Benutzer nicht das Gefühl haben darf, dass initial schon eine Ordnung in der Anzeige existiert, welche er beim ersten Anblick schon erahnen muss, um überhaupt eine Chance zu haben, diese Datenmenge aufs erste schnell zu beherrschen. Der Benutzer allein, wenn er zu tippen beginnt in dem Input Feld, das die Filterfunktion ermöglicht, sorgt in der Datenmenge beim Tippen für Ordnung. Der Filter sortiert die Ergebnismenge sortiert. Beschränkt bei dieser Filterung wird die Ergebnismenge nicht mehr. Wichtig ist, dass der Arbeitsspeicher geschont wird und die Daten bei Bedarf, also beim Tippen, nachgeladen werden. Es ist davon auszugehen, dass mehr als 10 Mio. Patienten in diesem Krankenhaus behandelt werden.
+
+Die notwendigen Datenbankänderungen dazu sind diese:
+<pre>
+-- Trigram Extension für schnelle Pattern-Suche
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+-- GIN Index für schnelle Namenssuche
+CREATE INDEX idx_patients_fullname_trgm ON patients 
+USING gin ((first_name || ' ' || last_name) gin_trgm_ops);
+</pre>
+
 ## EPA Integration
 
 The system implements FHIR R4 standard for healthcare interoperability:
@@ -249,49 +263,6 @@ The system converts patient data to FHIR R4 format:
 - Contact information (telecom, address)
 - Extensions for blood type and allergies
 - Emergency contacts
-
-## 🧪 Testing
-
-### Manual Testing
-
-```bash
-# Get all patients
-curl http://localhost:8080/hospital-management/api/patients
-
-# Create a patient
-curl -X POST http://localhost:8080/hospital-management/api/patients \
-  -H "Content-Type: application/json" \
-  -d '{
-    "firstName": "John",
-    "lastName": "Doe",
-    "dateOfBirth": "1990-01-01",
-    "gender": "Männlich",
-    "insuranceNumber": "INS-2024-999",
-    "epaEnabled": true
-  }'
-
-# Sync to EPA
-curl -X POST http://localhost:8080/hospital-management/api/epa/sync/1
-```
-
-### Order List of Patients 
-
-Es werden zu Beginn zufällig aus allen mehr als 1000 Patienten in der DB nur etwas mehr als die Bildschirmhöhe angezeigt. Diese Anzeige ist nicht geordnet, da der Benutzer nicht das Gefühl haben darf, dass initial schon eine Ordnung in der Anzeige existiert, welche er beim ersten Anblick schon erahnen muss, um überhaupt eine Chance zu haben, diese Datenmenge aufs erste schnell zu beherrschen. Der Benutzer allein, wenn er zu tippen beginnt in dem Input Feld, das die Filterfunktion ermöglicht, sorgt in der Datenmenge beim Tippen für Ordnung. Der Filter sortiert die Ergebnismenge sortiert. Beschränkt bei dieser Filterung wird die Ergebnismenge nicht mehr. Wichtig ist, dass der Arbeitsspeicher geschont wird und die Daten bei Bedarf, also beim Tippen, nachgeladen werden. Es ist davon auszugehen, dass mehr als 10 Mio. Patienten in diesem Krankenhaus behandelt werden.
-
-Die notwendigen Datenbankänderungen dazu sind diese:
-<pre>
--- Trigram Extension für schnelle Pattern-Suche
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
-
--- GIN Index für schnelle Namenssuche
-CREATE INDEX idx_patients_fullname_trgm ON patients 
-USING gin ((first_name || ' ' || last_name) gin_trgm_ops);
-</pre>
-### Run Unit Tests
-
-```bash
-mvn test
-```
 
 ## Features Detail
 
@@ -391,11 +362,8 @@ curl http://localhost:8080/hospital-management/api/epa/statistics
 git clone https://github.com/hjstephan/hospital-system.git
 cd hospital-system
 
-# Build
-mvn clean package
-
-# Run tests
-mvn test
+# Build and test
+mvn clean verify
 
 # Skip tests
 mvn clean package -DskipTests
